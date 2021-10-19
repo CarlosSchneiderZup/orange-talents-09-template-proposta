@@ -9,6 +9,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 
+import br.com.propostas.entidades.enums.AvaliacaoFinanceira;
 import org.springframework.http.HttpStatus;
 
 import br.com.propostas.commons.exceptions.ApiErrorException;
@@ -31,6 +32,7 @@ public class Proposta {
     private String endereco;
     @Column(nullable = false)
     private BigDecimal salario;
+    private AvaliacaoFinanceira avaliacaoFinanceira;
 
     @Deprecated
     public Proposta() {
@@ -56,5 +58,13 @@ public class Proposta {
 
     public Long getId() {
         return id;
+    }
+
+    public void setAvaliacaoFinanceira(String avaliacao) {
+        if (avaliacao.equals("COM_RESTRICAO")) {
+            this.avaliacaoFinanceira = AvaliacaoFinanceira.NAO_ELEGIVEL;
+        } else {
+            this.avaliacaoFinanceira = AvaliacaoFinanceira.ELEGIVEL;
+        }
     }
 }
