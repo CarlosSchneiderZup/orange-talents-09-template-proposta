@@ -1,7 +1,11 @@
 package br.com.propostas.repositorios;
 
-import br.com.propostas.entidades.Proposta;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import br.com.propostas.entidades.Proposta;
+
 public interface PropostaRepository extends JpaRepository<Proposta, Long> {
+	Optional<Proposta> findByDocumento(String documento);
 }

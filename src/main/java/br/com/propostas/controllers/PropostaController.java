@@ -34,7 +34,7 @@ public class PropostaController {
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<NovaPropostaDto> cadastraProposta(@RequestBody @Valid PropostaForm form, UriComponentsBuilder builder) {
 
-        Proposta proposta = new Proposta(form);
+        Proposta proposta = Proposta.montaPropostaValida(form, propostaRepository);
         propostaRepository.save(proposta);
         URI uri = builder.path("/propostas/{id}").buildAndExpand(proposta.getId()).toUri();
         return ResponseEntity.created(uri).body(new NovaPropostaDto(proposta.getId()));

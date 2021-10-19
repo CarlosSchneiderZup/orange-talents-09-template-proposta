@@ -2,10 +2,13 @@ package br.com.propostas.commons.errors;
 
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 public class ErroPadrao {
 
     String campo;
     String mensagem;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy 'T'HH:mm:ss", timezone = "GMT")
     LocalDateTime instante;
 
     public ErroPadrao(String campo, String erro, LocalDateTime instante) {

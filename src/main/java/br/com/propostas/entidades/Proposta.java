@@ -1,9 +1,19 @@
 package br.com.propostas.entidades;
 
-import br.com.propostas.controllers.forms.PropostaForm;
-
-import javax.persistence.*;
 import java.math.BigDecimal;
+import java.util.Optional;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+
+import org.springframework.http.HttpStatus;
+
+import br.com.propostas.commons.exceptions.ApiErrorException;
+import br.com.propostas.controllers.forms.PropostaForm;
+import br.com.propostas.repositorios.PropostaRepository;
 
 @Entity
 public class Proposta {
@@ -27,12 +37,21 @@ public class Proposta {
 
     }
 
-    public Proposta(PropostaForm form) {
+    private Proposta(PropostaForm form) {
         this.email = form.getEmail();
         this.nome = form.getNome();
         this.documento = form.getDocumento();
         this.endereco = form.getEndereco();
         this.salario = BigDecimal.valueOf(form.getSalario());
+    }
+    
+    public static Proposta montaPropostaValida(PropostaForm form, PropostaRepository propostaRepository) {
+    	Optional<Proposta> proposta = propostaRepository.findByDocumento(form.getDocumento());
+    	if(proposta.isPresent()) {
+    		throw new ApiErrorException("Já existe uma proposta para este documento", "documento", HttpStatus.UNPROCESSABLE_ENTITY);
+    	}
+    	
+    	return new Proposta(form);
     }
 
     public Long getId() {
