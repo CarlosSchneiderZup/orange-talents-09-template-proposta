@@ -33,6 +33,8 @@ public class Proposta {
     @Column(nullable = false)
     private BigDecimal salario;
     private AvaliacaoFinanceira avaliacaoFinanceira;
+    @Column(name = "nro_cartao")
+    private String nroCartao;
 
     @Deprecated
     public Proposta() {
@@ -66,5 +68,9 @@ public class Proposta {
         } else {
             this.avaliacaoFinanceira = AvaliacaoFinanceira.ELEGIVEL;
         }
+    }
+
+    public void setNroCartao(String nroCartao) {
+        this.nroCartao = nroCartao;
     }
 }
