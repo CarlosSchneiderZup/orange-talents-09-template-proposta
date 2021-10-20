@@ -11,6 +11,9 @@ import br.com.propostas.repositorios.PropostaRepository;
 import br.com.propostas.utils.clients.ConsultaCartao;
 import br.com.propostas.utils.clients.ConsultaFinanceiro;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import feign.FeignException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,12 +24,15 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import javax.validation.Valid;
 import java.net.URI;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 @RestController
 @RequestMapping("/propostas")
 public class PropostaController {
+
+    private Logger logger = LoggerFactory.getLogger(PropostaController.class);
 
     @Autowired
     private PropostaRepository propostaRepository;
@@ -64,20 +70,38 @@ public class PropostaController {
     @Scheduled(fixedDelayString = "${periodicidade.verificacao-cartao}")
     private void associaCartaoAProposta() {
         List<Proposta> propostasSemCartao = propostaRepository.findPropostasElegiveisSemCartao();
-        List<Proposta> propostasComCartao = new ArrayList<>();
 
-        if(propostasSemCartao.isEmpty()) {
+        if (propostasSemCartao.isEmpty()) {
             return;
         }
 
-        for(Proposta proposta : propostasSemCartao) {
-            RespostaCartao resposta = consultaCartao.solicitarConsulta(proposta.getId());
-            if(resposta != null && resposta.getId() != null) {
-                proposta.setNroCartao(resposta.getId());
-                propostasComCartao.add(proposta);
-                System.out.println(resposta.getId() + " para o cartao de proposta " + resposta.getIdProposta());
+        List<Proposta> propostasComCartao = geraListaDePropostasValidas(propostasSemCartao);
+        propostaRepository.saveAll(propostasComCartao);
+    }
+
+    private List<Proposta> geraListaDePropostasValidas(List<Proposta> propostasSemCartao) {
+
+        List<Proposta> result = new ArrayList<>();
+        for (Proposta proposta : propostasSemCartao) {
+            try {
+                ResponseEntity<RespostaCartao> respostaConsulta = consultaCartao.solicitarConsulta(proposta.getId());
+                if (respostaConsulta.getStatusCode() == HttpStatus.OK) {
+                    RespostaCartao resposta = respostaConsulta.getBody();
+
+                    proposta.setNroCartao(resposta.getId());
+                    result.add(proposta);
+                    logger.info(ofuscaResposta(resposta.getId()) + " para o cartao de proposta " + resposta.getIdProposta());
+                }
+            } catch (FeignException.FeignClientException e) {
+                logger.warn("A solicitação para a proposta de id " + proposta.getId() + " ainda não foi processada");
+            } catch (FeignException e) {
+                logger.warn("Feign está forá do ar em " + LocalDateTime.now());
             }
         }
-        propostaRepository.saveAll(propostasComCartao);
+        return result;
+    }
+
+    private String ofuscaResposta(String id) {
+        return id.substring(0, 5) + "*****" + id.substring(id.length() -2, id.length());
     }
 }
