@@ -2,6 +2,7 @@ package br.com.propostas.controllers;
 
 import br.com.propostas.commons.validators.GaranteDocumentoValidoValidator;
 import br.com.propostas.controllers.dtos.NovaPropostaDto;
+import br.com.propostas.controllers.dtos.PropostaDto;
 import br.com.propostas.controllers.dtos.RespostaCartao;
 import br.com.propostas.controllers.dtos.ResultadoAnalise;
 import br.com.propostas.controllers.forms.PropostaForm;
@@ -10,7 +11,6 @@ import br.com.propostas.entidades.Proposta;
 import br.com.propostas.repositorios.PropostaRepository;
 import br.com.propostas.utils.clients.ConsultaCartao;
 import br.com.propostas.utils.clients.ConsultaFinanceiro;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import feign.FeignException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,6 +27,7 @@ import java.net.URI;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/propostas")
@@ -52,19 +53,38 @@ public class PropostaController {
     }
 
     @PostMapping
-    public ResponseEntity<NovaPropostaDto> cadastraProposta(@RequestBody @Valid PropostaForm form, UriComponentsBuilder builder) throws JsonProcessingException {
+    public ResponseEntity<NovaPropostaDto> cadastraProposta(@RequestBody @Valid PropostaForm form, UriComponentsBuilder builder) {
 
         Proposta proposta = Proposta.montaPropostaValida(form, propostaRepository);
         propostaRepository.save(proposta);
         URI uri = builder.path("/propostas/{id}").buildAndExpand(proposta.getId()).toUri();
 
-        SolicitacaoAnalise solicitacaoAnalise = new SolicitacaoAnalise(form.getDocumento(), form.getNome(), proposta.getId().toString());
-        ResultadoAnalise resultado = consultaFinanceiro.solicitarConsulta(solicitacaoAnalise);
-
-        proposta.setAvaliacaoFinanceira(resultado.getResultadoSolicitacao());
-        propostaRepository.save(proposta);
+        realizarConsultaFinanceira(proposta);
 
         return ResponseEntity.created(uri).body(new NovaPropostaDto(proposta.getId()));
+    }
+
+    private void realizarConsultaFinanceira(Proposta proposta) {
+        SolicitacaoAnalise solicitacaoAnalise = new SolicitacaoAnalise(proposta.getDocumento(), proposta.getNome(), proposta.getId().toString());
+        try {
+            ResponseEntity<ResultadoAnalise> resultadoAnalise = consultaFinanceiro.solicitarConsulta(solicitacaoAnalise);
+            ResultadoAnalise resultado = resultadoAnalise.getBody();
+            proposta.setAvaliacaoFinanceira(resultado.getResultadoSolicitacao());
+        } catch (FeignException.UnprocessableEntity e) {
+            proposta.setAvaliacaoFinanceira("COM_RESTRICAO");
+        }
+        propostaRepository.save(proposta);
+    }
+
+    @GetMapping(value = "/{id}")
+    public ResponseEntity<PropostaDto> encontrarPropostaPorId(@PathVariable Long id) {
+        Optional<Proposta> propostaInformada = propostaRepository.findById(id);
+
+        if (propostaInformada.isPresent()) {
+            Proposta proposta = propostaInformada.get();
+            return ResponseEntity.ok(proposta.montaPropostaDto());
+        }
+        return ResponseEntity.notFound().build();
     }
 
     @Scheduled(fixedDelayString = "${periodicidade.verificacao-cartao}")
@@ -95,13 +115,13 @@ public class PropostaController {
             } catch (FeignException.FeignClientException e) {
                 logger.warn("A solicitação para a proposta de id " + proposta.getId() + " ainda não foi processada");
             } catch (FeignException e) {
-                logger.warn("Feign está forá do ar em " + LocalDateTime.now());
+                logger.error("Feign está forá do ar em " + LocalDateTime.now());
             }
         }
         return result;
     }
 
     private String ofuscaResposta(String id) {
-        return id.substring(0, 5) + "*****" + id.substring(id.length() -2, id.length());
+        return id.substring(0, 5) + "*****" + id.substring(id.length() - 2);
     }
 }

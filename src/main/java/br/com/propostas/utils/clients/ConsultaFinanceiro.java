@@ -3,6 +3,7 @@ package br.com.propostas.utils.clients;
 import br.com.propostas.controllers.dtos.ResultadoAnalise;
 import br.com.propostas.controllers.forms.SolicitacaoAnalise;
 import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
@@ -12,5 +13,5 @@ import java.util.Map;
 public interface ConsultaFinanceiro {
 
     @PostMapping(consumes = "application/json")
-    ResultadoAnalise solicitarConsulta(@RequestBody SolicitacaoAnalise form);
+    ResponseEntity<ResultadoAnalise> solicitarConsulta(@RequestBody SolicitacaoAnalise form);
 }
