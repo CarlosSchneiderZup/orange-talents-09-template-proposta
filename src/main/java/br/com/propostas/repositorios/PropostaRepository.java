@@ -12,4 +12,7 @@ public interface PropostaRepository extends JpaRepository<Proposta, Long> {
 
 	@Query(value = "select * from proposta where avaliacao_financeira = 1 and nro_cartao is null", nativeQuery = true)
 	List<Proposta> findPropostasElegiveisSemCartao();
+
+	@Query(value = "select * from proposta where avaliacao_financeira = 2", nativeQuery = true)
+	List<Proposta> findPropostasSemAvaliacaoFinanceira();
 }

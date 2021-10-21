@@ -22,6 +22,7 @@ import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import javax.transaction.Transactional;
 import javax.validation.Valid;
 import java.net.URI;
 import java.time.LocalDateTime;
@@ -85,6 +86,19 @@ public class PropostaController {
             return ResponseEntity.ok(proposta.montaPropostaDto());
         }
         return ResponseEntity.notFound().build();
+    }
+
+    @Scheduled(fixedDelayString = "${periodicidade.verificacao-cartao}")
+    private void verificaPropostasSemAvaliacao() {
+        List<Proposta> propostasSemAvaliacaoFinanceira = propostaRepository.findPropostasSemAvaliacaoFinanceira();
+
+        if (propostasSemAvaliacaoFinanceira.isEmpty()) {
+            return;
+        }
+
+        for(Proposta proposta: propostasSemAvaliacaoFinanceira) {
+            realizarConsultaFinanceira(proposta);
+        }
     }
 
     @Scheduled(fixedDelayString = "${periodicidade.verificacao-cartao}")

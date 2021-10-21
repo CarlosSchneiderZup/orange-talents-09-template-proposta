@@ -27,7 +27,7 @@ public class Proposta {
     private String endereco;
     @Column(nullable = false)
     private BigDecimal salario;
-    private AvaliacaoFinanceira avaliacaoFinanceira;
+    private AvaliacaoFinanceira avaliacaoFinanceira = AvaliacaoFinanceira.EM_ANALISE;
     @Column(name = "nro_cartao")
     private String nroCartao;
 
