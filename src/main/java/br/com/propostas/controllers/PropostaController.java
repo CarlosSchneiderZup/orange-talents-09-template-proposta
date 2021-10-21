@@ -7,7 +7,9 @@ import br.com.propostas.controllers.dtos.RespostaCartao;
 import br.com.propostas.controllers.dtos.ResultadoAnalise;
 import br.com.propostas.controllers.forms.PropostaForm;
 import br.com.propostas.controllers.forms.SolicitacaoAnalise;
+import br.com.propostas.entidades.Cartao;
 import br.com.propostas.entidades.Proposta;
+import br.com.propostas.repositorios.CartaoRepository;
 import br.com.propostas.repositorios.PropostaRepository;
 import br.com.propostas.utils.clients.ConsultaCartao;
 import br.com.propostas.utils.clients.ConsultaFinanceiro;
@@ -22,7 +24,6 @@ import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import javax.transaction.Transactional;
 import javax.validation.Valid;
 import java.net.URI;
 import java.time.LocalDateTime;
@@ -34,10 +35,13 @@ import java.util.Optional;
 @RequestMapping("/propostas")
 public class PropostaController {
 
-    private Logger logger = LoggerFactory.getLogger(PropostaController.class);
+    private final Logger logger = LoggerFactory.getLogger(PropostaController.class);
 
     @Autowired
     private PropostaRepository propostaRepository;
+
+    @Autowired
+    private CartaoRepository cartaoRepository;
 
     @Autowired
     private ConsultaFinanceiro consultaFinanceiro;
@@ -109,21 +113,22 @@ public class PropostaController {
             return;
         }
 
-        List<Proposta> propostasComCartao = geraListaDePropostasValidas(propostasSemCartao);
-        propostaRepository.saveAll(propostasComCartao);
+        geraListaDePropostasValidas(propostasSemCartao);
+
     }
 
-    private List<Proposta> geraListaDePropostasValidas(List<Proposta> propostasSemCartao) {
+    private void geraListaDePropostasValidas(List<Proposta> propostasSemCartao) {
+        List<Proposta> propostasValidas = new ArrayList<>();
+        List<Cartao> cartoesValidos = new ArrayList<>();
 
-        List<Proposta> result = new ArrayList<>();
         for (Proposta proposta : propostasSemCartao) {
             try {
                 ResponseEntity<RespostaCartao> respostaConsulta = consultaCartao.solicitarConsulta(proposta.getId());
                 if (respostaConsulta.getStatusCode() == HttpStatus.OK) {
                     RespostaCartao resposta = respostaConsulta.getBody();
-
                     proposta.setNroCartao(resposta.getId());
-                    result.add(proposta);
+                    propostasValidas.add(proposta);
+                    cartoesValidos.add(Cartao.geraCartao(resposta, propostaRepository));
                     logger.info(ofuscaResposta(resposta.getId()) + " para o cartao de proposta " + resposta.getIdProposta());
                 }
             } catch (FeignException.FeignClientException e) {
@@ -132,7 +137,8 @@ public class PropostaController {
                 logger.error("Feign está forá do ar em " + LocalDateTime.now());
             }
         }
-        return result;
+        propostaRepository.saveAll(propostasValidas);
+        cartaoRepository.saveAll(cartoesValidos);
     }
 
     private String ofuscaResposta(String id) {
