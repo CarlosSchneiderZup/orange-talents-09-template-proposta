@@ -7,6 +7,13 @@ public class ResultadoAnalise {
     private String resultadoSolicitacao;
     private String idProposta;
 
+    public ResultadoAnalise(String documento, String nome, String resultadoSolicitacao, String idProposta) {
+        this.documento = documento;
+        this.nome = nome;
+        this.resultadoSolicitacao = resultadoSolicitacao;
+        this.idProposta = idProposta;
+    }
+
     public String getDocumento() {
         return documento;
     }
