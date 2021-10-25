@@ -1,9 +1,10 @@
 package br.com.propostas.entidades;
 
+import br.com.propostas.commons.exceptions.ApiErrorException;
 import br.com.propostas.controllers.forms.BiometriaForm;
+import org.springframework.http.HttpStatus;
 
 import javax.persistence.*;
-import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
 @Entity
@@ -25,14 +26,20 @@ public class Biometria {
     }
 
     private Biometria(BiometriaForm form, Proposta proposta) {
-        byte[] byteBiometria = form.getBiometria().getBytes();
-
-        this.biometria = Base64.getEncoder().encodeToString(byteBiometria);
+        this.biometria = form.getBiometria();
         this.proposta = proposta;
+
     }
 
     public static Biometria montaNovaBiometria(BiometriaForm form, Proposta proposta) {
-        return new Biometria(form, proposta);
+        try {
+            Base64.Decoder decoder = Base64.getDecoder();
+            decoder.decode(form.getBiometria());
+            return new Biometria(form, proposta);
+        } catch(IllegalArgumentException e) {
+            throw new ApiErrorException("A String informada não é um Base64", "biometria", HttpStatus.BAD_REQUEST);
+        }
+
     }
 
     public Long getId() {

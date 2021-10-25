@@ -3,7 +3,6 @@ package br.com.propostas.controllers;
 import br.com.propostas.controllers.dtos.ResultadoAnalise;
 import br.com.propostas.controllers.forms.BiometriaForm;
 import br.com.propostas.controllers.forms.PropostaForm;
-import br.com.propostas.entidades.Biometria;
 import br.com.propostas.entidades.Proposta;
 import br.com.propostas.repositorios.PropostaRepository;
 import br.com.propostas.utils.clients.ConsultaFinanceiro;
@@ -23,8 +22,6 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import javax.transaction.Transactional;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -65,7 +62,7 @@ class BiometriaControllerTest {
     @Test
     void deveCadastrarUmaNovaBiometriaERetornarStatus201ComOLinkDeRedirect() throws Exception {
 
-        BiometriaForm novaBiometria = new BiometriaForm("Biometria!");
+        BiometriaForm novaBiometria = new BiometriaForm("SGVsbG8gd29ybGQ=");
 
         mockMvc.perform(MockMvcRequestBuilders.post(uri + "/" + proposta.getId())
                 .content(gson.toJson(novaBiometria))
@@ -77,7 +74,7 @@ class BiometriaControllerTest {
     @Test
     void naoDeveCadastrarUmaNovaBiometriaComIdDePropostaInvalidoERetornar404() throws Exception {
 
-        BiometriaForm novaBiometria = new BiometriaForm("Biometria!");
+        BiometriaForm novaBiometria = new BiometriaForm("SGVsbG8gd29ybGQ=");
 
         mockMvc.perform(MockMvcRequestBuilders.post(uri + "/1000")
                         .content(gson.toJson(novaBiometria))
@@ -86,11 +83,22 @@ class BiometriaControllerTest {
     }
 
     @Test
+    void naoDeveCadastrarUmaNovaBiometriaComStringQueNaoEhBase64ERetornarStatus400() throws Exception {
+
+        BiometriaForm novaBiometria = new BiometriaForm("Biometria!");
+
+        mockMvc.perform(MockMvcRequestBuilders.post(uri + "/" + proposta.getId())
+                        .content(gson.toJson(novaBiometria))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest());
+    }
+
+    @Test
     void naoDeveCadastrarUmaNovaBiometriaValorDeBiometriaNuloERetornar400() throws Exception {
 
         BiometriaForm novaBiometria = new BiometriaForm(null);
 
-        mockMvc.perform(MockMvcRequestBuilders.post(uri + "/1000")
+        mockMvc.perform(MockMvcRequestBuilders.post(uri + "/" + proposta.getId())
                         .content(gson.toJson(novaBiometria))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest());
