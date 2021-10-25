@@ -9,6 +9,8 @@ import org.springframework.http.HttpStatus;
 
 import javax.persistence.*;
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @Entity
@@ -30,6 +32,9 @@ public class Proposta {
     private AvaliacaoFinanceira avaliacaoFinanceira = AvaliacaoFinanceira.EM_ANALISE;
     @Column(name = "nro_cartao")
     private String nroCartao;
+
+    @OneToMany(mappedBy = "proposta")
+    List<Biometria> biometrias = new ArrayList<>();
 
     @Deprecated
     public Proposta() {

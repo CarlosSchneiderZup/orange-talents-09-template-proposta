@@ -1,7 +1,7 @@
 package br.com.propostas.controllers;
 
 import br.com.propostas.commons.validators.GaranteDocumentoValidoValidator;
-import br.com.propostas.controllers.dtos.NovaPropostaDto;
+import br.com.propostas.controllers.dtos.NovaUrlDto;
 import br.com.propostas.controllers.dtos.PropostaDto;
 import br.com.propostas.controllers.dtos.RespostaCartao;
 import br.com.propostas.controllers.dtos.ResultadoAnalise;
@@ -58,7 +58,7 @@ public class PropostaController {
     }
 
     @PostMapping
-    public ResponseEntity<NovaPropostaDto> cadastraProposta(@RequestBody @Valid PropostaForm form, UriComponentsBuilder builder) {
+    public ResponseEntity<NovaUrlDto> cadastraProposta(@RequestBody @Valid PropostaForm form, UriComponentsBuilder builder) {
 
         Proposta proposta = Proposta.montaPropostaValida(form, propostaRepository);
         propostaRepository.save(proposta);
@@ -66,7 +66,7 @@ public class PropostaController {
 
         realizarConsultaFinanceira(proposta);
 
-        return ResponseEntity.created(uri).body(new NovaPropostaDto(proposta.getId()));
+        return ResponseEntity.created(uri).body(new NovaUrlDto(proposta.getId(), "propostas"));
     }
 
     private void realizarConsultaFinanceira(Proposta proposta) {
