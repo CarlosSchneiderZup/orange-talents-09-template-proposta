@@ -77,6 +77,8 @@ public class PropostaController {
             proposta.setAvaliacaoFinanceira(resultado.getResultadoSolicitacao());
         } catch (FeignException.UnprocessableEntity e) {
             proposta.setAvaliacaoFinanceira("COM_RESTRICAO");
+        } catch ( FeignException e) {
+            logger.error("Serviço de consulta de elegibilidade indisponível no momento: " + LocalDateTime.now());
         }
         propostaRepository.save(proposta);
     }
