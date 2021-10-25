@@ -121,16 +121,16 @@ public class PropostaController {
 
     private void geraListaDePropostasValidas(List<Proposta> propostasSemCartao) {
         List<Proposta> propostasValidas = new ArrayList<>();
-        List<Cartao> cartoesValidos = new ArrayList<>();
 
         for (Proposta proposta : propostasSemCartao) {
             try {
                 ResponseEntity<RespostaCartao> respostaConsulta = consultaCartao.solicitarConsulta(proposta.getId());
                 if (respostaConsulta.getStatusCode() == HttpStatus.OK) {
                     RespostaCartao resposta = respostaConsulta.getBody();
-                    proposta.setNroCartao(resposta.getId());
                     propostasValidas.add(proposta);
-                    cartoesValidos.add(Cartao.geraCartao(resposta, propostaRepository));
+                    Cartao cartao = Cartao.geraCartao(resposta, propostaRepository);
+                    cartaoRepository.save(cartao);
+                    proposta.setCartao(cartao);
                     logger.info(ofuscaResposta(resposta.getId()) + " para o cartao de proposta " + resposta.getIdProposta());
                 }
             } catch (FeignException.FeignClientException e) {
@@ -140,7 +140,6 @@ public class PropostaController {
             }
         }
         propostaRepository.saveAll(propostasValidas);
-        cartaoRepository.saveAll(cartoesValidos);
     }
 
     private String ofuscaResposta(String id) {

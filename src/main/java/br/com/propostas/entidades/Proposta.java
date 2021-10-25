@@ -30,8 +30,10 @@ public class Proposta {
     @Column(nullable = false)
     private BigDecimal salario;
     private AvaliacaoFinanceira avaliacaoFinanceira = AvaliacaoFinanceira.EM_ANALISE;
-    @Column(name = "nro_cartao")
-    private String nroCartao;
+
+    @OneToOne
+    @JoinColumn(name = "nro_cartao", nullable = true)
+    private Cartao cartao;
 
     @OneToMany(mappedBy = "proposta")
     List<Biometria> biometrias = new ArrayList<>();
@@ -88,8 +90,8 @@ public class Proposta {
         return avaliacaoFinanceira;
     }
 
-    public void setNroCartao(String nroCartao) {
-        this.nroCartao = nroCartao;
+    public void setCartao(Cartao cartao) {
+        this.cartao = cartao;
     }
 
     private String ofuscaEmail() {
@@ -110,9 +112,10 @@ public class Proposta {
     }
 
     private String ofuscaCartao() {
-        if(nroCartao == null) {
-            return nroCartao;
+        if(cartao == null) {
+            return null;
         }
+        String nroCartao = cartao.getNumeroCartao();
         return nroCartao.substring(0, 4) + "***" + nroCartao.substring(nroCartao.length() -2);
     }
 }

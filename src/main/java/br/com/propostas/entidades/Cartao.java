@@ -23,7 +23,7 @@ public class Cartao {
     private Integer limite;
     @Embedded
     private Vencimento vencimento;
-    @OneToOne
+    @OneToOne(mappedBy = "cartao")
     private Proposta proposta;
 
     @Deprecated
@@ -43,5 +43,9 @@ public class Cartao {
     public static Cartao geraCartao(RespostaCartao resposta, PropostaRepository propostaRepository) {
         Proposta proposta = propostaRepository.findById(Long.valueOf(resposta.getIdProposta())).orElseThrow(() ->new ApiErrorException("Id não encontrada", "id", HttpStatus.NOT_FOUND));
         return new Cartao(resposta, proposta);
+    }
+
+    public String getNumeroCartao() {
+        return numeroCartao;
     }
 }
