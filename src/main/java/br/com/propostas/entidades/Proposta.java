@@ -5,6 +5,7 @@ import br.com.propostas.controllers.dtos.PropostaDto;
 import br.com.propostas.controllers.forms.PropostaForm;
 import br.com.propostas.entidades.enums.AvaliacaoFinanceira;
 import br.com.propostas.repositorios.PropostaRepository;
+import org.hibernate.annotations.Cascade;
 import org.springframework.http.HttpStatus;
 
 import javax.persistence.*;
@@ -31,8 +32,8 @@ public class Proposta {
     private BigDecimal salario;
     private AvaliacaoFinanceira avaliacaoFinanceira = AvaliacaoFinanceira.EM_ANALISE;
 
-    @OneToOne
-    @JoinColumn(name = "nro_cartao", nullable = true)
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "nro_cartao")
     private Cartao cartao;
 
     @OneToMany(mappedBy = "proposta")

@@ -1,4 +1,4 @@
-package br.com.propostas.entidades;
+package br.com.propostas.entidades.acoplamentos;
 
 import javax.persistence.Embeddable;
 

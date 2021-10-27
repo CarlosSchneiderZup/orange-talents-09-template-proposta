@@ -41,9 +41,6 @@ public class PropostaController {
     private PropostaRepository propostaRepository;
 
     @Autowired
-    private CartaoRepository cartaoRepository;
-
-    @Autowired
     private ConsultaFinanceiro consultaFinanceiro;
 
     @Autowired
@@ -128,8 +125,7 @@ public class PropostaController {
                 if (respostaConsulta.getStatusCode() == HttpStatus.OK) {
                     RespostaCartao resposta = respostaConsulta.getBody();
                     propostasValidas.add(proposta);
-                    Cartao cartao = Cartao.geraCartao(resposta, propostaRepository);
-                    cartaoRepository.save(cartao);
+                    Cartao cartao = Cartao.geraCartao(resposta);
                     proposta.setCartao(cartao);
                     logger.info(ofuscaResposta(resposta.getId()) + " para o cartao de proposta " + resposta.getIdProposta());
                 }
