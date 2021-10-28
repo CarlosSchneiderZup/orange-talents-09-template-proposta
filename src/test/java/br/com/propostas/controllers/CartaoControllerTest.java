@@ -2,6 +2,7 @@ package br.com.propostas.controllers;
 
 import br.com.propostas.controllers.dtos.RespostaBloqueioCartao;
 import br.com.propostas.controllers.dtos.RespostaCartao;
+import br.com.propostas.controllers.forms.AvisoViagemForm;
 import br.com.propostas.entidades.Cartao;
 import br.com.propostas.repositorios.CartaoRepository;
 import br.com.propostas.utils.clients.ConsultaCartao;
@@ -14,12 +15,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import javax.transaction.Transactional;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 
@@ -60,7 +63,7 @@ class CartaoControllerTest {
     }
 
     @Test
-    void naoDeveEncontrarUmCartaoComIdQueNaoExisteERetornarStatus404() throws Exception {
+    void naoDeveEncontrarUmCartaoComIdQueNaoExisteAoSolicitarUmBloqueioERetornarStatus404() throws Exception {
 
         mockMvc.perform(MockMvcRequestBuilders.post(uri + "/bloqueios/404")
                         .header("User-Agent", "PostmanRuntime/7.28.4"))
@@ -139,5 +142,57 @@ class CartaoControllerTest {
                 .andExpect(MockMvcResultMatchers.status().isOk());
 
         assertTrue(cartao.verificaBloqueioAtivo());
+    }
+
+    @Test
+    void naoDeveEncontrarUmCartaoComIdQueNaoExisteAoSolicitarUmaViagemERetornarStatus404() throws Exception {
+
+        String aviso = "{\"destino\" : \"Tocantins\", \"dataTermino\" : \""+LocalDate.now().plusDays(10)+"\"}";
+
+        mockMvc.perform(MockMvcRequestBuilders.post(uri + "/avisos/viagem/404" )
+                        .content(aviso)
+                        .header("User-Agent", "PostmanRuntime/7.28.4")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.status().isNotFound());
+
+    }
+
+    @Test
+    void naoDeveEnviarUmAvisoDeViagemComDataPassadaERetornarStatus400() throws Exception {
+
+        String aviso = "{\"destino\" : \"Tocantins\", \"dataTermino\" : \""+LocalDate.now().minusDays(10)+"\"}";
+
+        mockMvc.perform(MockMvcRequestBuilders.post(uri + "/avisos/viagem/" + cartao.getId() )
+                        .content(aviso)
+                        .header("User-Agent", "PostmanRuntime/7.28.4")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest());
+
+    }
+
+    @Test
+    void naoDeveEnviarUmAvisoDeViagemComDestinoNuloERetornarStatus400() throws Exception {
+
+        String aviso = "{\"destino\" : \"\", \"dataTermino\" : \"" + LocalDate.now().plusDays(10) +"\"}";
+
+        mockMvc.perform(MockMvcRequestBuilders.post(uri + "/avisos/viagem/" + cartao.getId() )
+                        .content(aviso)
+                        .header("User-Agent", "PostmanRuntime/7.28.4")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest());
+
+    }
+
+    @Test
+    void deveCadastrarUmNovoAvisoDeViagemERetornarStatus200() throws Exception {
+
+
+        String aviso = "{\"destino\" : \"Tocantins\", \"dataTermino\" : \""+LocalDate.now().plusDays(10)+"\"}";
+        mockMvc.perform(MockMvcRequestBuilders.post(uri + "/avisos/viagem/" + cartao.getId() )
+                        .content(aviso)
+                        .header("User-Agent", "PostmanRuntime/7.28.4")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+
     }
 }
