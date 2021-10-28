@@ -1,11 +1,8 @@
 package br.com.propostas.entidades;
 
-import br.com.propostas.commons.exceptions.ApiErrorException;
 import br.com.propostas.controllers.dtos.RespostaCartao;
 import br.com.propostas.entidades.acoplamentos.Bloqueio;
 import br.com.propostas.entidades.acoplamentos.Vencimento;
-import br.com.propostas.repositorios.PropostaRepository;
-import org.springframework.http.HttpStatus;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -25,6 +22,9 @@ public class Cartao {
     private LocalDateTime dataEmissao;
     @Column(nullable = false)
     private Integer limite;
+
+    @OneToMany(mappedBy = "biometria")
+    List<Biometria> biometrias = new ArrayList<>();
 
     @Embedded
     private Vencimento vencimento;

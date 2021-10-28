@@ -1,10 +1,10 @@
 package br.com.propostas.controllers;
 
+import br.com.propostas.controllers.dtos.RespostaCartao;
 import br.com.propostas.controllers.dtos.ResultadoAnalise;
 import br.com.propostas.controllers.forms.BiometriaForm;
-import br.com.propostas.controllers.forms.PropostaForm;
-import br.com.propostas.entidades.Proposta;
-import br.com.propostas.repositorios.PropostaRepository;
+import br.com.propostas.entidades.Cartao;
+import br.com.propostas.repositorios.CartaoRepository;
 import br.com.propostas.utils.clients.ConsultaFinanceiro;
 import com.google.gson.Gson;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,6 +22,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import javax.transaction.Transactional;
+import java.time.LocalDateTime;
 
 @SpringBootTest
 @AutoConfigureMockMvc(addFilters = false)
@@ -29,7 +30,7 @@ import javax.transaction.Transactional;
 class BiometriaControllerTest {
 
     private String uri = "/biometrias";
-    private Proposta proposta;
+    private Cartao cartao;
 
     private Gson gson = new Gson();
 
@@ -41,22 +42,15 @@ class BiometriaControllerTest {
     private ConsultaFinanceiro consultaFinanceiro;
 
     @Autowired
-    private PropostaRepository propostaRepository;
+    private CartaoRepository cartaoRepository;
 
     @BeforeEach
     void setUp() throws Exception {
 
-        PropostaForm novaProposta = new PropostaForm("joao@gmail.com", "Lucas João Mattos", "85393222009",
-                "Rua do Comércio, s/n", 33000.00);
+        RespostaCartao respostaCartao = new RespostaCartao("4526-3713-8877-6955", LocalDateTime.now().toString(), "Dono do cartão", "1", 8952, null);
+        cartao = Cartao.geraCartao(respostaCartao);
+        cartaoRepository.save(cartao);
 
-        ResponseEntity<ResultadoAnalise> response = ResponseEntity.status(HttpStatus.CREATED).body(new ResultadoAnalise("85393222009", "Lucas João Mattos", "SEM_RESTRICAO", "1"));
-        Mockito.when(consultaFinanceiro.solicitarConsulta(Mockito.any())).thenReturn(response);
-
-
-        mockMvc.perform(MockMvcRequestBuilders.post("/propostas").content(gson.toJson(novaProposta))
-                        .contentType(MediaType.APPLICATION_JSON));
-
-        proposta = propostaRepository.findByDocumento(novaProposta.getDocumento()).get();
     }
 
     @Test
@@ -64,7 +58,7 @@ class BiometriaControllerTest {
 
         BiometriaForm novaBiometria = new BiometriaForm("SGVsbG8gd29ybGQ=");
 
-        mockMvc.perform(MockMvcRequestBuilders.post(uri + "/" + proposta.getId())
+        mockMvc.perform(MockMvcRequestBuilders.post(uri + "/" + cartao.getId())
                 .content(gson.toJson(novaBiometria))
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isCreated())
@@ -72,7 +66,7 @@ class BiometriaControllerTest {
     }
 
     @Test
-    void naoDeveCadastrarUmaNovaBiometriaComIdDePropostaInvalidoERetornar404() throws Exception {
+    void naoDeveCadastrarUmaNovaBiometriaComIdDeCartaoInvalidoERetornar404() throws Exception {
 
         BiometriaForm novaBiometria = new BiometriaForm("SGVsbG8gd29ybGQ=");
 
@@ -87,7 +81,7 @@ class BiometriaControllerTest {
 
         BiometriaForm novaBiometria = new BiometriaForm("Biometria!");
 
-        mockMvc.perform(MockMvcRequestBuilders.post(uri + "/" + proposta.getId())
+        mockMvc.perform(MockMvcRequestBuilders.post(uri + "/" + cartao.getId())
                         .content(gson.toJson(novaBiometria))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest());
@@ -98,7 +92,7 @@ class BiometriaControllerTest {
 
         BiometriaForm novaBiometria = new BiometriaForm(null);
 
-        mockMvc.perform(MockMvcRequestBuilders.post(uri + "/" + proposta.getId())
+        mockMvc.perform(MockMvcRequestBuilders.post(uri + "/" + cartao.getId())
                         .content(gson.toJson(novaBiometria))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest());

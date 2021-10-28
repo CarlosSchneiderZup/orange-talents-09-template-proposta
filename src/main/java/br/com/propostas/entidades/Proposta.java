@@ -5,13 +5,10 @@ import br.com.propostas.controllers.dtos.PropostaDto;
 import br.com.propostas.controllers.forms.PropostaForm;
 import br.com.propostas.entidades.enums.AvaliacaoFinanceira;
 import br.com.propostas.repositorios.PropostaRepository;
-import org.hibernate.annotations.Cascade;
 import org.springframework.http.HttpStatus;
 
 import javax.persistence.*;
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 
 @Entity
@@ -35,9 +32,6 @@ public class Proposta {
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "nro_cartao")
     private Cartao cartao;
-
-    @OneToMany(mappedBy = "proposta")
-    List<Biometria> biometrias = new ArrayList<>();
 
     @Deprecated
     public Proposta() {
@@ -103,20 +97,21 @@ public class Proposta {
     private String ofuscaNome() {
         String[] nomeDividido = nome.split(" ");
         StringBuilder nomeFinal = new StringBuilder();
-        for(int i = 0; i < nomeDividido.length; i++) {
+        for (int i = 0; i < nomeDividido.length; i++) {
             nomeFinal.append(nomeDividido[i].substring(0, 1) + ". ");
         }
         return nomeFinal.toString();
     }
+
     private String ofuscaDocumento() {
-        return documento.substring(0, 3) + "***" + documento.substring(documento.length() -2);
+        return documento.substring(0, 3) + "***" + documento.substring(documento.length() - 2);
     }
 
     private String ofuscaCartao() {
-        if(cartao == null) {
+        if (cartao == null) {
             return null;
         }
         String nroCartao = cartao.getNumeroCartao();
-        return nroCartao.substring(0, 4) + "***" + nroCartao.substring(nroCartao.length() -2);
+        return nroCartao.substring(0, 4) + "***" + nroCartao.substring(nroCartao.length() - 2);
     }
 }

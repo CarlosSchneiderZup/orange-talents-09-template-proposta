@@ -104,7 +104,7 @@ class PropostaControllerTest {
 
         Proposta propostaSalva = propostaRepository.findByDocumento(propostaElegivel.getDocumento()).get();
 
-      //  assertEquals(AvaliacaoFinanceira.EM_ANALISE, propostaSalva.getAvaliacaoFinanceira());
+        assertEquals(AvaliacaoFinanceira.EM_ANALISE, propostaSalva.getAvaliacaoFinanceira());
     }
 
     @Test
