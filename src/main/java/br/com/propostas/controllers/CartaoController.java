@@ -4,7 +4,8 @@ import br.com.propostas.commons.exceptions.ApiErrorException;
 import br.com.propostas.controllers.dtos.RespostaBloqueioCartao;
 import br.com.propostas.controllers.forms.SolicitacaoBloqueio;
 import br.com.propostas.entidades.Cartao;
-import br.com.propostas.entidades.acoplamentos.Bloqueio;
+import br.com.propostas.entidades.Bloqueio;
+import br.com.propostas.repositorios.BloqueioRepository;
 import br.com.propostas.repositorios.CartaoRepository;
 import br.com.propostas.utils.clients.ConsultaCartao;
 import feign.FeignException;
@@ -28,10 +29,13 @@ public class CartaoController {
     private CartaoRepository cartaoRepository;
 
     @Autowired
+    private BloqueioRepository bloqueioRepository;
+
+    @Autowired
     private ConsultaCartao consultaCartao;
 
     @ResponseStatus(HttpStatus.OK)
-    @PutMapping("/bloqueios/{id}")
+    @PostMapping("/bloqueios/{id}")
     public void solicitaBloqueio(@PathVariable Long id, @RequestHeader("User-Agent") String userAgent, HttpServletRequest request) {
         Cartao cartao = cartaoRepository.findById(id).orElseThrow(() -> new ApiErrorException("Cartão não encontrado", "id", HttpStatus.NOT_FOUND));
 
@@ -41,8 +45,8 @@ public class CartaoController {
         }
 
         Bloqueio bloqueio = montaBloqueio(cartao, request.getRemoteAddr(), userAgent);
-        cartao.adicionaBloqueio(bloqueio);
-        cartaoRepository.save(cartao);
+        cartao.bloqueiaCartao();
+        bloqueioRepository.save(bloqueio);
 
     }
 
@@ -61,7 +65,7 @@ public class CartaoController {
             logger.error("O serviço de cartões está indisponível em " + LocalDateTime.now());
             throw new ApiErrorException("O serviço de bloqueio está temporariamente indisponível, tente novamente mais tarde", "cartao", HttpStatus.BAD_REQUEST);
         }
-        return new Bloqueio(ip, userAgent, true);
+        return new Bloqueio(ip, userAgent, true, cartao);
     }
 
     private String ofuscaResposta(String id) {

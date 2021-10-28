@@ -23,6 +23,7 @@ import javax.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest
@@ -61,7 +62,7 @@ class CartaoControllerTest {
     @Test
     void naoDeveEncontrarUmCartaoComIdQueNaoExisteERetornarStatus404() throws Exception {
 
-        mockMvc.perform(MockMvcRequestBuilders.put(uri + "/bloqueios/404")
+        mockMvc.perform(MockMvcRequestBuilders.post(uri + "/bloqueios/404")
                         .header("User-Agent", "PostmanRuntime/7.28.4"))
                 .andExpect(MockMvcResultMatchers.status().isNotFound());
     }
@@ -77,7 +78,7 @@ class CartaoControllerTest {
         Mockito.when(consultaCartao.solicitarBloqueio(Mockito.any(), Mockito.any()))
                 .thenReturn(responseBloqueio);
 
-        mockMvc.perform(MockMvcRequestBuilders.put(uri + "/bloqueios/" + cartaoFalha.getId())
+        mockMvc.perform(MockMvcRequestBuilders.post(uri + "/bloqueios/" + cartaoFalha.getId())
                         .header("User-Agent", "PostmanRuntime/7.28.4"))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest());
 
@@ -90,10 +91,11 @@ class CartaoControllerTest {
         Mockito.when(consultaCartao.solicitarBloqueio(Mockito.any(), Mockito.any()))
                 .thenThrow(exception);
 
-        mockMvc.perform(MockMvcRequestBuilders.put(uri + "/bloqueios/" + cartao.getId())
+        mockMvc.perform(MockMvcRequestBuilders.post(uri + "/bloqueios/" + cartaoFalha.getId())
                         .header("User-Agent", "PostmanRuntime/7.28.4"))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest());
 
+        assertFalse(cartao.verificaBloqueioAtivo());
     }
 
     @Test
@@ -111,11 +113,11 @@ class CartaoControllerTest {
         Mockito.when(consultaCartao.solicitarBloqueio(Mockito.any(), Mockito.any()))
                 .thenReturn(responseBloqueio);
 
-        mockMvc.perform(MockMvcRequestBuilders.put(uri + "/bloqueios/" + esteCartao.getId())
+        mockMvc.perform(MockMvcRequestBuilders.post(uri + "/bloqueios/" + esteCartao.getId())
                         .header("User-Agent", "PostmanRuntime/7.28.4"))
                 .andExpect(MockMvcResultMatchers.status().isOk());
 
-        mockMvc.perform(MockMvcRequestBuilders.put(uri + "/bloqueios/" + esteCartao.getId())
+        mockMvc.perform(MockMvcRequestBuilders.post(uri + "/bloqueios/" + esteCartao.getId())
                         .header("User-Agent", "PostmanRuntime/7.28.4"))
                 .andExpect(MockMvcResultMatchers.status().isUnprocessableEntity());
 
@@ -132,7 +134,7 @@ class CartaoControllerTest {
         Mockito.when(consultaCartao.solicitarBloqueio(Mockito.any(), Mockito.any()))
                 .thenReturn(responseBloqueio);
 
-        mockMvc.perform(MockMvcRequestBuilders.put(uri + "/bloqueios/" + cartao.getId())
+        mockMvc.perform(MockMvcRequestBuilders.post(uri + "/bloqueios/" + cartao.getId())
                         .header("User-Agent", "PostmanRuntime/7.28.4"))
                 .andExpect(MockMvcResultMatchers.status().isOk());
 

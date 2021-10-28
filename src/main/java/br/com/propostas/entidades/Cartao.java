@@ -1,8 +1,8 @@
 package br.com.propostas.entidades;
 
 import br.com.propostas.controllers.dtos.RespostaCartao;
-import br.com.propostas.entidades.acoplamentos.Bloqueio;
 import br.com.propostas.entidades.acoplamentos.Vencimento;
+import br.com.propostas.entidades.enums.StatusBloqueio;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -22,14 +22,11 @@ public class Cartao {
     private LocalDateTime dataEmissao;
     @Column(nullable = false)
     private Integer limite;
-
-    @OneToMany(mappedBy = "biometria")
-    List<Biometria> biometrias = new ArrayList<>();
+    @Enumerated(EnumType.STRING)
+    private StatusBloqueio statusBloqueio = StatusBloqueio.LIBERADO;
 
     @Embedded
     private Vencimento vencimento;
-    @ElementCollection
-    private List<Bloqueio> bloqueios = new ArrayList<>();
 
     @Deprecated
     public Cartao() {
@@ -57,20 +54,10 @@ public class Cartao {
     }
 
     public boolean verificaBloqueioAtivo() {
-        if(bloqueios.isEmpty()) {
-            return false;
-        }
-        for(Bloqueio bloqueio : bloqueios) {
-            if(bloqueio.getAtivo()) {
-                return true;
-            }
-        }
-        return false;
+        return statusBloqueio.equals(StatusBloqueio.BLOQUEADO);
     }
 
-    public void adicionaBloqueio(Bloqueio bloqueio) {
-        bloqueios.add(bloqueio);
+    public void bloqueiaCartao() {
+        statusBloqueio = StatusBloqueio.BLOQUEADO;
     }
-
-
 }
