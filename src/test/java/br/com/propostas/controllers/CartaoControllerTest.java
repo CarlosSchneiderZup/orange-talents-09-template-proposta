@@ -1,9 +1,10 @@
 package br.com.propostas.controllers;
 
+import br.com.propostas.controllers.dtos.RespostaAvisoViagem;
 import br.com.propostas.controllers.dtos.RespostaBloqueioCartao;
 import br.com.propostas.controllers.dtos.RespostaCartao;
-import br.com.propostas.controllers.forms.AvisoViagemForm;
 import br.com.propostas.entidades.Cartao;
+import br.com.propostas.entidades.acoplamentos.Vencimento;
 import br.com.propostas.repositorios.CartaoRepository;
 import br.com.propostas.utils.clients.ConsultaCartao;
 import com.google.gson.Gson;
@@ -53,10 +54,10 @@ class CartaoControllerTest {
     @BeforeEach
     void setUp() {
 
-        RespostaCartao respostaCartao = new RespostaCartao("4526-3713-8877-6955", LocalDateTime.now().toString(), "Dono do cartão", "1", 8952, null);
+        RespostaCartao respostaCartao = new RespostaCartao("4526-3713-8877-6955", LocalDateTime.now().toString(), "Dono do cartão", "1", 8952, new Vencimento());
         cartao = Cartao.geraCartao(respostaCartao);
 
-        RespostaCartao respostaCartaoFalha = new RespostaCartao("1111-2222-3333-4444", LocalDateTime.now().toString(), "Dono do cartão", "2", 1930, null);
+        RespostaCartao respostaCartaoFalha = new RespostaCartao("1111-2222-3333-4444", LocalDateTime.now().toString(), "Dono do cartão", "2", 1930, new Vencimento());
         cartaoFalha = Cartao.geraCartao(respostaCartaoFalha);
         cartaoRepository.saveAll(Arrays.asList(cartao, cartaoFalha));
 
@@ -147,9 +148,9 @@ class CartaoControllerTest {
     @Test
     void naoDeveEncontrarUmCartaoComIdQueNaoExisteAoSolicitarUmaViagemERetornarStatus404() throws Exception {
 
-        String aviso = "{\"destino\" : \"Tocantins\", \"dataTermino\" : \""+LocalDate.now().plusDays(10)+"\"}";
+        String aviso = "{\"destino\" : \"Tocantins\", \"dataTermino\" : \"" + LocalDate.now().plusDays(10) + "\"}";
 
-        mockMvc.perform(MockMvcRequestBuilders.post(uri + "/avisos/viagem/404" )
+        mockMvc.perform(MockMvcRequestBuilders.post(uri + "/avisos/viagem/404")
                         .content(aviso)
                         .header("User-Agent", "PostmanRuntime/7.28.4")
                         .contentType(MediaType.APPLICATION_JSON))
@@ -160,9 +161,9 @@ class CartaoControllerTest {
     @Test
     void naoDeveEnviarUmAvisoDeViagemComDataPassadaERetornarStatus400() throws Exception {
 
-        String aviso = "{\"destino\" : \"Tocantins\", \"dataTermino\" : \""+LocalDate.now().minusDays(10)+"\"}";
+        String aviso = "{\"destino\" : \"Tocantins\", \"dataTermino\" : \"" + LocalDate.now().minusDays(10) + "\"}";
 
-        mockMvc.perform(MockMvcRequestBuilders.post(uri + "/avisos/viagem/" + cartao.getId() )
+        mockMvc.perform(MockMvcRequestBuilders.post(uri + "/avisos/viagem/" + cartao.getId())
                         .content(aviso)
                         .header("User-Agent", "PostmanRuntime/7.28.4")
                         .contentType(MediaType.APPLICATION_JSON))
@@ -173,9 +174,9 @@ class CartaoControllerTest {
     @Test
     void naoDeveEnviarUmAvisoDeViagemComDestinoNuloERetornarStatus400() throws Exception {
 
-        String aviso = "{\"destino\" : \"\", \"dataTermino\" : \"" + LocalDate.now().plusDays(10) +"\"}";
+        String aviso = "{\"destino\" : \"\", \"dataTermino\" : \"" + LocalDate.now().plusDays(10) + "\"}";
 
-        mockMvc.perform(MockMvcRequestBuilders.post(uri + "/avisos/viagem/" + cartao.getId() )
+        mockMvc.perform(MockMvcRequestBuilders.post(uri + "/avisos/viagem/" + cartao.getId())
                         .content(aviso)
                         .header("User-Agent", "PostmanRuntime/7.28.4")
                         .contentType(MediaType.APPLICATION_JSON))
@@ -186,13 +187,52 @@ class CartaoControllerTest {
     @Test
     void deveCadastrarUmNovoAvisoDeViagemERetornarStatus200() throws Exception {
 
+        RespostaAvisoViagem resposta = Mockito.mock(RespostaAvisoViagem.class);
+        Mockito.when(resposta.getResultado()).thenReturn("CRIADO");
+        ResponseEntity<RespostaAvisoViagem> responseAviso = Mockito.mock(ResponseEntity.class);
+        Mockito.when(responseAviso.getBody()).thenReturn(resposta);
+        Mockito.when(consultaCartao.solicitarViagem(Mockito.any(), Mockito.any())).thenReturn(responseAviso);
 
-        String aviso = "{\"destino\" : \"Tocantins\", \"dataTermino\" : \""+LocalDate.now().plusDays(10)+"\"}";
-        mockMvc.perform(MockMvcRequestBuilders.post(uri + "/avisos/viagem/" + cartao.getId() )
+        String aviso = "{\"destino\" : \"Tocantins\", \"dataTermino\" : \"" + LocalDate.now().plusDays(10) + "\"}";
+        mockMvc.perform(MockMvcRequestBuilders.post(uri + "/avisos/viagem/" + cartao.getId())
                         .content(aviso)
                         .header("User-Agent", "PostmanRuntime/7.28.4")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isOk());
+
+    }
+
+    @Test
+    void naoDeveCadastrarUmNovoAvisoDeViagemQuandoAApiEstiverForaDoArERetornarStatus400() throws Exception {
+
+        FeignException exception = Mockito.mock(FeignException.class);
+        Mockito.when(consultaCartao.solicitarViagem(Mockito.any(), Mockito.any())).thenThrow(exception);
+
+        String aviso = "{\"destino\" : \"Tocantins\", \"dataTermino\" : \"" + LocalDate.now().plusDays(10) + "\"}";
+        mockMvc.perform(MockMvcRequestBuilders.post(uri + "/avisos/viagem/" + cartao.getId())
+                        .content(aviso)
+                        .header("User-Agent", "PostmanRuntime/7.28.4")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest());
+
+    }
+
+    @Test
+    void naoDeveCadastrarUmNovoAvisoDeViagemQuandoAConsultaNaApiRetornarFalhaERetornarStatus400() throws Exception {
+
+        RespostaAvisoViagem resposta = Mockito.mock(RespostaAvisoViagem.class);
+        Mockito.when(resposta.getResultado()).thenReturn("FALHA");
+        ResponseEntity<RespostaAvisoViagem> responseAviso = Mockito.mock(ResponseEntity.class);
+        Mockito.when(responseAviso.getBody()).thenReturn(resposta);
+        Mockito.when(consultaCartao.solicitarViagem(Mockito.any(), Mockito.any())).thenReturn(responseAviso);
+
+
+        String aviso = "{\"destino\" : \"Tocantins\", \"dataTermino\" : \"" + LocalDate.now().plusDays(10) + "\"}";
+        mockMvc.perform(MockMvcRequestBuilders.post(uri + "/avisos/viagem/" + cartao.getId())
+                        .content(aviso)
+                        .header("User-Agent", "PostmanRuntime/7.28.4")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest());
 
     }
 }

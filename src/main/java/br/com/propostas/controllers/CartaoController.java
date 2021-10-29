@@ -1,8 +1,10 @@
 package br.com.propostas.controllers;
 
 import br.com.propostas.commons.exceptions.ApiErrorException;
+import br.com.propostas.controllers.dtos.RespostaAvisoViagem;
 import br.com.propostas.controllers.dtos.RespostaBloqueioCartao;
 import br.com.propostas.controllers.forms.AvisoViagemForm;
+import br.com.propostas.controllers.forms.SolicitacaoAvisoViagem;
 import br.com.propostas.controllers.forms.SolicitacaoBloqueio;
 import br.com.propostas.entidades.AvisoViagem;
 import br.com.propostas.entidades.Bloqueio;
@@ -51,20 +53,17 @@ public class CartaoController {
             throw new ApiErrorException("Este cartão ja possui um bloqueio ativo", "bloqueios", HttpStatus.UNPROCESSABLE_ENTITY);
         }
 
-        Bloqueio bloqueio = montaBloqueio(cartao, request.getRemoteAddr(), userAgent);
-        cartao.bloqueiaCartao();
-        bloqueioRepository.save(bloqueio);
-
+        notificaSistemaLegadoDeBloqueio(cartao, request.getRemoteAddr(), userAgent);
     }
 
-    private Bloqueio montaBloqueio(Cartao cartao, String ip, String userAgent) {
+    private void notificaSistemaLegadoDeBloqueio(Cartao cartao, String ip, String userAgent) {
         try {
             ResponseEntity<RespostaBloqueioCartao> resposta = consultaCartao.solicitarBloqueio(cartao.getNumeroCartao(), new SolicitacaoBloqueio("Proposta"));
 
             RespostaBloqueioCartao respostaBloqueio = resposta.getBody();
 
             if (respostaBloqueio.getResultado().equals("FALHA")) {
-                logger.error("Falha ao buscar o resultado da Api para o cartao " + ofuscaResposta(cartao.getNumeroCartao()));
+                logger.error("Falha ao realizar o bloqueio, lançada pelo sistema bancario, para o cartao " + ofuscaResposta(cartao.getNumeroCartao()));
                 throw new ApiErrorException("Falha ao realizar o bloqueio", "bloqueio", HttpStatus.BAD_REQUEST);
             }
 
@@ -72,16 +71,38 @@ public class CartaoController {
             logger.error("O serviço de cartões está indisponível em " + LocalDateTime.now());
             throw new ApiErrorException("O serviço de bloqueio está temporariamente indisponível, tente novamente mais tarde", "cartao", HttpStatus.BAD_REQUEST);
         }
-        return new Bloqueio(ip, userAgent, true, cartao);
+
+
+        Bloqueio bloqueio = new Bloqueio(ip, userAgent, true, cartao);
+        cartao.bloqueiaCartao();
+        bloqueioRepository.save(bloqueio);
     }
 
     @ResponseStatus(HttpStatus.OK)
     @PostMapping("/avisos/viagem/{id}")
     public void avisaViagem(@PathVariable Long id, @RequestBody @Valid AvisoViagemForm form, @RequestHeader("User-Agent") String userAgent, HttpServletRequest request) {
-        System.out.println("Hello from the other side\n\n\n\n\n\n\n\n\n\n\n At least I can say that I tried");
         Cartao cartao = cartaoRepository.findById(id).orElseThrow(() -> new ApiErrorException("Cartão não encontrado", "id", HttpStatus.NOT_FOUND));
 
-        AvisoViagem aviso = AvisoViagem.montaAvisoViagem(cartao, form, userAgent, request.getRemoteAddr());
+        notificaSistemaLegadoDeViagem(cartao, form, userAgent, request.getRemoteAddr());
+    }
+
+    private void notificaSistemaLegadoDeViagem(Cartao cartao, AvisoViagemForm form, String userAgent, String ipSolicitante) {
+        SolicitacaoAvisoViagem solicitacao = new SolicitacaoAvisoViagem(form.getDestino(), form.getDataTermino().toString());
+
+        try {
+            ResponseEntity<RespostaAvisoViagem> resposta = consultaCartao.solicitarViagem(cartao.getNumeroCartao(), solicitacao);
+
+            if (resposta.getBody().getResultado().equals("FALHA")) {
+                logger.error("Erro do sistema bancário ao tentar solicitar uma viagem para o cartão " + ofuscaResposta(cartao.getNumeroCartao()));
+                throw new ApiErrorException("Solicitação de aviso de viagem recusada", "viagem", HttpStatus.BAD_REQUEST);
+            }
+
+        } catch (FeignException e) {
+            logger.error("O serviço de cartões está indisponível em " + LocalDateTime.now());
+            throw new ApiErrorException("O serviço de aviso de viagem está temporariamente indisponível, tente novamente mais tarde", "viagem", HttpStatus.BAD_REQUEST);
+        }
+
+        AvisoViagem aviso = AvisoViagem.montaAvisoViagem(cartao, form, userAgent, ipSolicitante);
         viagemRepository.save(aviso);
     }
 
