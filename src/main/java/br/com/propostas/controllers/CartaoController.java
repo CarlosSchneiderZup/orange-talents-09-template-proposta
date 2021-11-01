@@ -52,7 +52,7 @@ public class CartaoController {
     private ConsultaCartao consultaCartao;
 
     @ResponseStatus(HttpStatus.OK)
-    @PostMapping("/bloqueios/{id}")
+    @PostMapping("/{id}/bloqueios")
     public void solicitaBloqueio(@PathVariable Long id, @RequestHeader("User-Agent") String userAgent, HttpServletRequest request) {
         Cartao cartao = cartaoRepository.findById(id).orElseThrow(() -> new ApiErrorException("Cartão não encontrado", "id", HttpStatus.NOT_FOUND));
 
@@ -82,7 +82,7 @@ public class CartaoController {
     }
 
     @ResponseStatus(HttpStatus.OK)
-    @PostMapping("/avisos/viagem/{id}")
+    @PostMapping("/{id}/avisos/viagem")
     public void avisaViagem(@PathVariable Long id, @RequestBody @Valid AvisoViagemForm form, @RequestHeader("User-Agent") String userAgent, HttpServletRequest request) {
         Cartao cartao = cartaoRepository.findById(id).orElseThrow(() -> new ApiErrorException("Cartão não encontrado", "id", HttpStatus.NOT_FOUND));
 
@@ -109,7 +109,7 @@ public class CartaoController {
         viagemRepository.save(aviso);
     }
 
-    @PostMapping("/carteiras/{id}")
+    @PostMapping("/{id}/carteiras")
     public ResponseEntity<NovaUrlDto> cadastraCarteiraDigital(@PathVariable Long id, @RequestBody @Valid CarteiraDigitalForm form, UriComponentsBuilder builder) {
         Cartao cartao = cartaoRepository.findById(id).orElseThrow(() -> new ApiErrorException("Cartão não encontrado", "id", HttpStatus.NOT_FOUND));
 
