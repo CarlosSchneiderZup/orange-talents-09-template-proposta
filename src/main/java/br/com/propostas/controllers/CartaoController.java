@@ -115,14 +115,14 @@ public class CartaoController {
     }
 
     @PostMapping("/carteiras/{id}")
-    public ResponseEntity<NovaUrlDto> cadastraCarteiraDigital(@PathVariable Long id, @RequestBody CarteiraDigitalForm form, UriComponentsBuilder builder) {
+    public ResponseEntity<NovaUrlDto> cadastraCarteiraDigital(@PathVariable Long id, @RequestBody @Valid CarteiraDigitalForm form, UriComponentsBuilder builder) {
         Cartao cartao = cartaoRepository.findById(id).orElseThrow(() -> new ApiErrorException("Cartão não encontrado", "id", HttpStatus.NOT_FOUND));
 
         if (cartao.verificaDuplicidadeDeCarteira(form.getCarteiraDigital())) {
             throw new ApiErrorException("Este cartão já possui uma carteira digital de: " + form.getCarteiraDigital(), "carteiraDigital", HttpStatus.UNPROCESSABLE_ENTITY);
         }
 
-        CarteiraDigital carteiraDigital = solicitaNovaCarteiraDigital(cartao, form.getCarteiraDigital());
+        CarteiraDigital carteiraDigital = solicitaNovaCarteiraDigital(cartao, form);
         carteiraDigitalRepository.save(carteiraDigital);
         cartao.adicionaNovaCarteira(carteiraDigital);
         cartaoRepository.save(cartao);
@@ -131,12 +131,12 @@ public class CartaoController {
         return ResponseEntity.created(uri).body(new NovaUrlDto(carteiraDigital.getId(), "carteiras"));
     }
 
-    private CarteiraDigital solicitaNovaCarteiraDigital(Cartao cartao, CarteiraDigitalCadastrada carteiraSolicitada) {
+    private CarteiraDigital solicitaNovaCarteiraDigital(Cartao cartao, CarteiraDigitalForm form) {
         try {
-            SolicitacaoInclusaoCarteira solicitacao = new SolicitacaoInclusaoCarteira(cartao.getProposta().getEmail(), carteiraSolicitada.toString());
+            SolicitacaoInclusaoCarteira solicitacao = new SolicitacaoInclusaoCarteira(form.getEmail(), form.getCarteiraDigital().toString());
             ResultadoCarteira resultado = consultaCartao.solicitarNovaCarteira(cartao.getNumeroCartao(), solicitacao);
 
-            return CarteiraDigital.montaCarteiraDigital(cartao, carteiraSolicitada, resultado);
+            return CarteiraDigital.montaCarteiraDigital(cartao, form.getCarteiraDigital(), resultado);
         }catch (FeignException.UnprocessableEntity e) {
             logger.error("Falha ao vincular carteira, lançada pelo sistema bancario, para o cartao " + ofuscaResposta(cartao.getNumeroCartao()));
             throw new ApiErrorException("Não foi possível vincular seu cartão com a carteira digital", "carteiraDigital", HttpStatus.BAD_REQUEST);

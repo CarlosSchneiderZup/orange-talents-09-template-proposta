@@ -133,6 +133,7 @@ public class PropostaController {
             }
         }
         propostaRepository.saveAll(propostasValidas);
+
     }
 
     private String ofuscaResposta(String id) {

@@ -26,9 +26,6 @@ public class Cartao {
     @Enumerated(EnumType.STRING)
     private StatusBloqueio statusBloqueio = StatusBloqueio.LIBERADO;
 
-    @OneToOne(mappedBy = "cartao", fetch = FetchType.EAGER)
-    private Proposta proposta;
-
     @OneToMany(mappedBy = "cartao")
     private List<CarteiraDigital> carteiras = new ArrayList<>();
 
@@ -58,10 +55,6 @@ public class Cartao {
 
     public String getNumeroCartao() {
         return numeroCartao;
-    }
-
-    public Proposta getProposta() {
-        return proposta;
     }
 
     public boolean verificaBloqueioAtivo() {
