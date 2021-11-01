@@ -81,6 +81,10 @@ public class Proposta {
         return nome;
     }
 
+    public String getEmail() {
+        return email;
+    }
+
     public AvaliacaoFinanceira getAvaliacaoFinanceira() {
         return avaliacaoFinanceira;
     }

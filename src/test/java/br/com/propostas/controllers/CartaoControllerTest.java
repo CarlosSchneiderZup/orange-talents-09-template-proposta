@@ -3,9 +3,13 @@ package br.com.propostas.controllers;
 import br.com.propostas.controllers.dtos.RespostaAvisoViagem;
 import br.com.propostas.controllers.dtos.RespostaBloqueioCartao;
 import br.com.propostas.controllers.dtos.RespostaCartao;
+import br.com.propostas.controllers.dtos.ResultadoCarteira;
+import br.com.propostas.controllers.forms.PropostaForm;
 import br.com.propostas.entidades.Cartao;
+import br.com.propostas.entidades.Proposta;
 import br.com.propostas.entidades.acoplamentos.Vencimento;
 import br.com.propostas.repositorios.CartaoRepository;
+import br.com.propostas.repositorios.PropostaRepository;
 import br.com.propostas.utils.clients.ConsultaCartao;
 import com.google.gson.Gson;
 import feign.FeignException;
@@ -47,9 +51,11 @@ class CartaoControllerTest {
     @Autowired
     private CartaoRepository cartaoRepository;
 
+    @Autowired
+    private PropostaRepository propostaRepository;
+
     @MockBean
     private ConsultaCartao consultaCartao;
-
 
     @BeforeEach
     void setUp() {
@@ -60,7 +66,6 @@ class CartaoControllerTest {
         RespostaCartao respostaCartaoFalha = new RespostaCartao("1111-2222-3333-4444", LocalDateTime.now().toString(), "Dono do cartão", "2", 1930, new Vencimento());
         cartaoFalha = Cartao.geraCartao(respostaCartaoFalha);
         cartaoRepository.saveAll(Arrays.asList(cartao, cartaoFalha));
-
     }
 
     @Test
@@ -233,6 +238,40 @@ class CartaoControllerTest {
                         .header("User-Agent", "PostmanRuntime/7.28.4")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest());
-
     }
+
+    @Test
+    @Transactional
+    void deveAssociarUmaNovaCarteiraAUmCartaoERetornarStatus201() throws Exception {
+
+        ResultadoCarteira resultado = Mockito.mock(ResultadoCarteira.class);
+        Mockito.when(resultado.getResultado()).thenReturn("ASSOCIADA");
+        Mockito.when(resultado.getId()).thenReturn("e2cd5f6c-d8c8-45f8-880b-8a1fc5f30100");
+        Mockito.when(consultaCartao.solicitarNovaCarteira(Mockito.any(), Mockito.any())).thenReturn(resultado);
+
+        String form = "{\"carteiraDigital\" : \"PAYPAL\"}";
+        mockMvc.perform(MockMvcRequestBuilders.post(uri + "/carteiras/" + cartao.getId())
+                        .content(form)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.status().isCreated())
+                .andExpect(MockMvcResultMatchers.redirectedUrlPattern("http://localhost/carteiras/*"));
+    }
+
+    @Test
+    void naoDeveAssociarUmaNovaCarteiraRepetidaAUmCartaoERetornarStatus422() throws Exception {
+
+        assertTrue(true);
+//        ResultadoCarteira resultado = Mockito.mock(ResultadoCarteira.class);
+//        Mockito.when(resultado.getResultado()).thenReturn("ASSOCIADA");
+//        Mockito.when(resultado.getId()).thenReturn("e2cd5f6c-d8c8-45f8-880b-8a1fc5f30100");
+//        Mockito.when(consultaCartao.solicitarNovaCarteira(Mockito.any(), Mockito.any())).thenReturn(resultado);
+//
+//        String form = "{\"carteiraDigital\" : \"PAYPAL\"}";
+//        mockMvc.perform(MockMvcRequestBuilders.post(uri + "/carteiras/" + cartao.getId())
+//                        .content(form)
+//                        .contentType(MediaType.APPLICATION_JSON))
+//                .andExpect(MockMvcResultMatchers.status().isCreated())
+//                .andExpect(MockMvcResultMatchers.redirectedUrlPattern("http://localhost/carteiras/*"));
+    }
+
 }

@@ -2,10 +2,13 @@ package br.com.propostas.entidades;
 
 import br.com.propostas.controllers.dtos.RespostaCartao;
 import br.com.propostas.entidades.acoplamentos.Vencimento;
+import br.com.propostas.entidades.enums.CarteiraDigitalCadastrada;
 import br.com.propostas.entidades.enums.StatusBloqueio;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 public class Cartao {
@@ -22,6 +25,12 @@ public class Cartao {
     private Integer limite;
     @Enumerated(EnumType.STRING)
     private StatusBloqueio statusBloqueio = StatusBloqueio.LIBERADO;
+
+    @OneToOne(mappedBy = "cartao", fetch = FetchType.EAGER)
+    private Proposta proposta;
+
+    @OneToMany(mappedBy = "cartao")
+    private List<CarteiraDigital> carteiras = new ArrayList<>();
 
     @Embedded
     private Vencimento vencimento;
@@ -51,11 +60,31 @@ public class Cartao {
         return numeroCartao;
     }
 
+    public Proposta getProposta() {
+        return proposta;
+    }
+
     public boolean verificaBloqueioAtivo() {
         return statusBloqueio.equals(StatusBloqueio.BLOQUEADO);
     }
 
     public void bloqueiaCartao() {
         statusBloqueio = StatusBloqueio.BLOQUEADO;
+    }
+
+    public boolean verificaDuplicidadeDeCarteira(CarteiraDigitalCadastrada possivelCarteira) {
+        if(carteiras.isEmpty()) {
+            return false;
+        }
+        for(CarteiraDigital carteira : carteiras) {
+            if(carteira.getCarteiraDigitalCadastrada().equals(possivelCarteira)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public void adicionaNovaCarteira(CarteiraDigital carteiraDigital) {
+        carteiras.add(carteiraDigital);
     }
 }

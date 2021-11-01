@@ -9,7 +9,6 @@ import br.com.propostas.controllers.forms.PropostaForm;
 import br.com.propostas.controllers.forms.SolicitacaoAnalise;
 import br.com.propostas.entidades.Cartao;
 import br.com.propostas.entidades.Proposta;
-import br.com.propostas.repositorios.CartaoRepository;
 import br.com.propostas.repositorios.PropostaRepository;
 import br.com.propostas.utils.clients.ConsultaCartao;
 import br.com.propostas.utils.clients.ConsultaFinanceiro;
@@ -111,9 +110,7 @@ public class PropostaController {
         if (propostasSemCartao.isEmpty()) {
             return;
         }
-
         geraListaDePropostasValidas(propostasSemCartao);
-
     }
 
     private void geraListaDePropostasValidas(List<Proposta> propostasSemCartao) {

@@ -3,8 +3,10 @@ package br.com.propostas.utils.clients;
 import br.com.propostas.controllers.dtos.RespostaAvisoViagem;
 import br.com.propostas.controllers.dtos.RespostaBloqueioCartao;
 import br.com.propostas.controllers.dtos.RespostaCartao;
+import br.com.propostas.controllers.dtos.ResultadoCarteira;
 import br.com.propostas.controllers.forms.SolicitacaoAvisoViagem;
 import br.com.propostas.controllers.forms.SolicitacaoBloqueio;
+import br.com.propostas.controllers.forms.SolicitacaoInclusaoCarteira;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
@@ -24,4 +26,8 @@ public interface ConsultaCartao {
 
     @PostMapping(value = "/{id}/avisos", consumes = "application/json")
     ResponseEntity<RespostaAvisoViagem> solicitarViagem(@PathVariable String id, @RequestBody SolicitacaoAvisoViagem solicitacao);
+
+    @PostMapping(value = "/{id}/carteiras", consumes = "application/json")
+    ResultadoCarteira solicitarNovaCarteira(@PathVariable String id, @RequestBody SolicitacaoInclusaoCarteira solicitacao);
+
 }
