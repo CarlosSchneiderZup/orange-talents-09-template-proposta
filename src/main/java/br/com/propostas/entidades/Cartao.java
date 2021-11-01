@@ -61,7 +61,7 @@ public class Cartao {
         return statusBloqueio.equals(StatusBloqueio.BLOQUEADO);
     }
 
-    public void bloqueiaCartao() {
+    public void bloquear() {
         statusBloqueio = StatusBloqueio.BLOQUEADO;
     }
 

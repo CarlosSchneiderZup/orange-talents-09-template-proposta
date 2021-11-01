@@ -10,11 +10,11 @@ import br.com.propostas.entidades.AvisoViagem;
 import br.com.propostas.entidades.Bloqueio;
 import br.com.propostas.entidades.Cartao;
 import br.com.propostas.entidades.CarteiraDigital;
-import br.com.propostas.entidades.enums.CarteiraDigitalCadastrada;
 import br.com.propostas.repositorios.BloqueioRepository;
 import br.com.propostas.repositorios.CartaoRepository;
 import br.com.propostas.repositorios.CarteiraDigitalRepository;
 import br.com.propostas.repositorios.ViagemRepository;
+import static br.com.propostas.security.Ofuscador.*;
 import br.com.propostas.utils.clients.ConsultaCartao;
 import feign.FeignException;
 import org.slf4j.Logger;
@@ -68,22 +68,17 @@ public class CartaoController {
         try {
             ResponseEntity<RespostaBloqueioCartao> resposta = consultaCartao.solicitarBloqueio(cartao.getNumeroCartao(), new SolicitacaoBloqueio("Proposta"));
 
-            RespostaBloqueioCartao respostaBloqueio = resposta.getBody();
+            Bloqueio bloqueio = new Bloqueio(ip, userAgent, true, cartao);
+            cartao.bloquear();
+            bloqueioRepository.save(bloqueio);
 
-            if (respostaBloqueio.getResultado().equals("FALHA")) {
-                logger.error("Falha ao realizar o bloqueio, lançada pelo sistema bancario, para o cartao " + ofuscaResposta(cartao.getNumeroCartao()));
-                throw new ApiErrorException("Falha ao realizar o bloqueio", "bloqueio", HttpStatus.BAD_REQUEST);
-            }
-
+        } catch (FeignException.UnprocessableEntity e) {
+            logger.error("Falha ao realizar o bloqueio, lançada pelo sistema bancario, para o cartao " + ofuscaCartao(cartao.getNumeroCartao()));
+            throw new ApiErrorException("Falha ao realizar o bloqueio", "bloqueio", HttpStatus.UNPROCESSABLE_ENTITY);
         } catch (FeignException e) {
             logger.error("O serviço de cartões está indisponível em " + LocalDateTime.now());
             throw new ApiErrorException("O serviço de bloqueio está temporariamente indisponível, tente novamente mais tarde", "cartao", HttpStatus.BAD_REQUEST);
         }
-
-
-        Bloqueio bloqueio = new Bloqueio(ip, userAgent, true, cartao);
-        cartao.bloqueiaCartao();
-        bloqueioRepository.save(bloqueio);
     }
 
     @ResponseStatus(HttpStatus.OK)
@@ -101,7 +96,7 @@ public class CartaoController {
             ResponseEntity<RespostaAvisoViagem> resposta = consultaCartao.solicitarViagem(cartao.getNumeroCartao(), solicitacao);
 
             if (resposta.getBody().getResultado().equals("FALHA")) {
-                logger.error("Erro do sistema bancário ao tentar solicitar uma viagem para o cartão " + ofuscaResposta(cartao.getNumeroCartao()));
+                logger.error("Erro do sistema bancário ao tentar solicitar uma viagem para o cartão " + ofuscaCartao(cartao.getNumeroCartao()));
                 throw new ApiErrorException("Solicitação de aviso de viagem recusada", "viagem", HttpStatus.BAD_REQUEST);
             }
 
@@ -137,16 +132,12 @@ public class CartaoController {
             ResultadoCarteira resultado = consultaCartao.solicitarNovaCarteira(cartao.getNumeroCartao(), solicitacao);
 
             return CarteiraDigital.montaCarteiraDigital(cartao, form.getCarteiraDigital(), resultado);
-        }catch (FeignException.UnprocessableEntity e) {
-            logger.error("Falha ao vincular carteira, lançada pelo sistema bancario, para o cartao " + ofuscaResposta(cartao.getNumeroCartao()));
+        } catch (FeignException.UnprocessableEntity e) {
+            logger.error("Falha ao vincular carteira, lançada pelo sistema bancario, para o cartao " + ofuscaCartao(cartao.getNumeroCartao()));
             throw new ApiErrorException("Não foi possível vincular seu cartão com a carteira digital", "carteiraDigital", HttpStatus.BAD_REQUEST);
         } catch (FeignException e) {
             logger.error("O serviço de cartões está indisponível em " + LocalDateTime.now() + " para adicionar uma nova carteira digital");
             throw new ApiErrorException("O serviço de carteiras digitais está temporariamente indisponível, tente novamente mais tarde", "cartao", HttpStatus.BAD_REQUEST);
         }
-    }
-
-    private String ofuscaResposta(String id) {
-        return id.substring(0, 5) + "*****" + id.substring(id.length() - 2);
     }
 }

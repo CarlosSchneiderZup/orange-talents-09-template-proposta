@@ -71,19 +71,16 @@ class CartaoControllerTest {
     }
 
     @Test
-    void naoDeveBloquearUmCartaoQuandoARespostaDaApiExternaEhFalhaERetornarStatus400() throws Exception {
+    void naoDeveBloquearUmCartaoQuandoARespostaDaApiExternaEhFalhaERetornarStatus422() throws Exception {
 
-        RespostaBloqueioCartao resposta = Mockito.mock(RespostaBloqueioCartao.class);
-        Mockito.when(resposta.getResultado()).thenReturn("FALHA");
-        ResponseEntity<RespostaBloqueioCartao> responseBloqueio = Mockito.mock(ResponseEntity.class);
-        Mockito.when(responseBloqueio.getBody()).thenReturn(resposta);
 
+        FeignException.UnprocessableEntity exception = Mockito.mock(FeignException.UnprocessableEntity.class);
         Mockito.when(consultaCartao.solicitarBloqueio(Mockito.any(), Mockito.any()))
-                .thenReturn(responseBloqueio);
+                .thenThrow(exception);
 
         mockMvc.perform(MockMvcRequestBuilders.post(uri + "/bloqueios/" + cartaoFalha.getId())
                         .header("User-Agent", "PostmanRuntime/7.28.4"))
-                .andExpect(MockMvcResultMatchers.status().isBadRequest());
+                .andExpect(MockMvcResultMatchers.status().isUnprocessableEntity());
 
     }
 

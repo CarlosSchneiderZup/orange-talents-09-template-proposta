@@ -1,5 +1,5 @@
 package br.com.propostas.entidades.enums;
 
 public enum CarteiraDigitalCadastrada {
-    PAYPAL;
+    PAYPAL, SAMSUNG_PAY;
 }

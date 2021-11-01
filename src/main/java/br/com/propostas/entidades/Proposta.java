@@ -5,6 +5,9 @@ import br.com.propostas.controllers.dtos.PropostaDto;
 import br.com.propostas.controllers.forms.PropostaForm;
 import br.com.propostas.entidades.enums.AvaliacaoFinanceira;
 import br.com.propostas.repositorios.PropostaRepository;
+
+import static br.com.propostas.security.Ofuscador.*;
+
 import org.springframework.http.HttpStatus;
 
 import javax.persistence.*;
@@ -56,7 +59,7 @@ public class Proposta {
     }
 
     public PropostaDto montaPropostaDto() {
-        return new PropostaDto(id, ofuscaEmail(), ofuscaNome(), ofuscaDocumento(), avaliacaoFinanceira, ofuscaCartao());
+        return new PropostaDto(id, ofuscaEmail(email), ofuscaNome(nome), ofuscaDocumento(documento), avaliacaoFinanceira, ofuscaCartao(cartao));
     }
 
     public Long getId() {
@@ -81,41 +84,11 @@ public class Proposta {
         return nome;
     }
 
-    public String getEmail() {
-        return email;
-    }
-
     public AvaliacaoFinanceira getAvaliacaoFinanceira() {
         return avaliacaoFinanceira;
     }
 
     public void setCartao(Cartao cartao) {
         this.cartao = cartao;
-    }
-
-    private String ofuscaEmail() {
-        String[] emailDividido = email.split("@");
-        return emailDividido[0].substring(0, 3) + "***@" + emailDividido[1];
-    }
-
-    private String ofuscaNome() {
-        String[] nomeDividido = nome.split(" ");
-        StringBuilder nomeFinal = new StringBuilder();
-        for (int i = 0; i < nomeDividido.length; i++) {
-            nomeFinal.append(nomeDividido[i].substring(0, 1) + ". ");
-        }
-        return nomeFinal.toString();
-    }
-
-    private String ofuscaDocumento() {
-        return documento.substring(0, 3) + "***" + documento.substring(documento.length() - 2);
-    }
-
-    private String ofuscaCartao() {
-        if (cartao == null) {
-            return null;
-        }
-        String nroCartao = cartao.getNumeroCartao();
-        return nroCartao.substring(0, 4) + "***" + nroCartao.substring(nroCartao.length() - 2);
     }
 }
