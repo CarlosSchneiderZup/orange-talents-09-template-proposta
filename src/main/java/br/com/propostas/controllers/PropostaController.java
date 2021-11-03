@@ -8,6 +8,7 @@ import br.com.propostas.controllers.forms.PropostaForm;
 import br.com.propostas.controllers.forms.SolicitacaoAnalise;
 import br.com.propostas.entidades.Proposta;
 import br.com.propostas.repositorios.PropostaRepository;
+import br.com.propostas.services.Encriptador;
 import br.com.propostas.utils.clients.ConsultaFinanceiro;
 import feign.FeignException;
 import org.slf4j.Logger;
@@ -45,7 +46,6 @@ public class PropostaController {
 
     @PostMapping
     public ResponseEntity<NovaUrlDto> cadastraProposta(@RequestBody @Valid PropostaForm form, UriComponentsBuilder builder) {
-
         Proposta proposta = Proposta.montaPropostaValida(form, propostaRepository);
         propostaRepository.save(proposta);
         URI uri = builder.path("/propostas/{id}").buildAndExpand(proposta.getId()).toUri();
@@ -56,7 +56,7 @@ public class PropostaController {
     }
 
     private void realizarConsultaFinanceira(Proposta proposta) {
-        SolicitacaoAnalise solicitacaoAnalise = new SolicitacaoAnalise(proposta.getDocumento(), proposta.getNome(), proposta.getId().toString());
+        SolicitacaoAnalise solicitacaoAnalise = new SolicitacaoAnalise(Encriptador.decriptar(proposta.getDocumento()), proposta.getNome(), proposta.getId().toString());
         try {
             ResponseEntity<ResultadoAnalise> resultadoAnalise = consultaFinanceiro.solicitarConsulta(solicitacaoAnalise);
             ResultadoAnalise resultado = resultadoAnalise.getBody();

@@ -43,7 +43,7 @@ public class ReavaliaPropostaService {
         List<Proposta> propostasAvaliadas = new ArrayList<>();
 
         for(Proposta proposta : propostas) {
-            SolicitacaoAnalise solicitacaoAnalise = new SolicitacaoAnalise(proposta.getDocumento(), proposta.getNome(), proposta.getId().toString());
+            SolicitacaoAnalise solicitacaoAnalise = new SolicitacaoAnalise(Encriptador.decriptar(proposta.getDocumento()), proposta.getNome(), proposta.getId().toString());
             try {
                 ResponseEntity<ResultadoAnalise> resultadoAnalise = consultaFinanceiro.solicitarConsulta(solicitacaoAnalise);
                 ResultadoAnalise resultado = resultadoAnalise.getBody();

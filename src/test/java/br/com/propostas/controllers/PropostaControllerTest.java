@@ -6,6 +6,7 @@ import br.com.propostas.controllers.forms.PropostaForm;
 import br.com.propostas.entidades.Proposta;
 import br.com.propostas.entidades.enums.AvaliacaoFinanceira;
 import br.com.propostas.repositorios.PropostaRepository;
+import br.com.propostas.services.Encriptador;
 import br.com.propostas.utils.clients.ConsultaFinanceiro;
 import com.google.gson.Gson;
 import feign.FeignException;
@@ -24,8 +25,9 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import javax.transaction.Transactional;
 
+import java.beans.Encoder;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 
 @SpringBootTest
 @AutoConfigureMockMvc(addFilters = false)
@@ -71,7 +73,7 @@ class PropostaControllerTest {
         mockMvc.perform(MockMvcRequestBuilders.post(uri).content(gson.toJson(propostaElegivel))
                 .contentType(MediaType.APPLICATION_JSON));
 
-        Proposta propostaSalva = propostaRepository.findByDocumento(propostaElegivel.getDocumento()).get();
+        Proposta propostaSalva = propostaRepository.findByDocumento(Encriptador.encriptar(propostaElegivel.getDocumento())).get();
 
         assertEquals(AvaliacaoFinanceira.ELEGIVEL, propostaSalva.getAvaliacaoFinanceira());
     }
@@ -87,7 +89,7 @@ class PropostaControllerTest {
         mockMvc.perform(MockMvcRequestBuilders.post(uri).content(gson.toJson(propostaInelegivel))
                 .contentType(MediaType.APPLICATION_JSON));
 
-        Proposta propostaSalva = propostaRepository.findByDocumento(propostaInelegivel.getDocumento()).get();
+        Proposta propostaSalva = propostaRepository.findByDocumento(Encriptador.encriptar(propostaInelegivel.getDocumento())).get();
 
         assertEquals(AvaliacaoFinanceira.NAO_ELEGIVEL, propostaSalva.getAvaliacaoFinanceira());
     }
@@ -102,7 +104,7 @@ class PropostaControllerTest {
         mockMvc.perform(MockMvcRequestBuilders.post(uri).content(gson.toJson(propostaElegivel))
                 .contentType(MediaType.APPLICATION_JSON));
 
-        Proposta propostaSalva = propostaRepository.findByDocumento(propostaElegivel.getDocumento()).get();
+        Proposta propostaSalva = propostaRepository.findByDocumento(Encriptador.encriptar(propostaElegivel.getDocumento())).get();
 
         assertEquals(AvaliacaoFinanceira.EM_ANALISE, propostaSalva.getAvaliacaoFinanceira());
     }
@@ -183,7 +185,7 @@ class PropostaControllerTest {
         mockMvc.perform(MockMvcRequestBuilders.post(uri).content(gson.toJson(novaProposta))
                 .contentType(MediaType.APPLICATION_JSON));
 
-        Proposta propostaSalva = propostaRepository.findByDocumento(novaProposta.getDocumento()).get();
+        Proposta propostaSalva = propostaRepository.findByDocumento(Encriptador.encriptar(novaProposta.getDocumento())).get();
 
         PropostaDto visualizacaoProposta = propostaSalva.montaPropostaDto();
 

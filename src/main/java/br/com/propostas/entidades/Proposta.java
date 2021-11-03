@@ -5,14 +5,14 @@ import br.com.propostas.controllers.dtos.PropostaDto;
 import br.com.propostas.controllers.forms.PropostaForm;
 import br.com.propostas.entidades.enums.AvaliacaoFinanceira;
 import br.com.propostas.repositorios.PropostaRepository;
-
-import static br.com.propostas.security.Ofuscador.*;
-
+import br.com.propostas.services.Encriptador;
 import org.springframework.http.HttpStatus;
 
 import javax.persistence.*;
 import java.math.BigDecimal;
 import java.util.Optional;
+
+import static br.com.propostas.security.Ofuscador.*;
 
 @Entity
 public class Proposta {
@@ -44,22 +44,21 @@ public class Proposta {
     private Proposta(PropostaForm form) {
         this.email = form.getEmail();
         this.nome = form.getNome();
-        this.documento = form.getDocumento();
+        this.documento = Encriptador.encriptar(form.getDocumento());
         this.endereco = form.getEndereco();
         this.salario = BigDecimal.valueOf(form.getSalario());
     }
 
     public static Proposta montaPropostaValida(PropostaForm form, PropostaRepository propostaRepository) {
-        Optional<Proposta> proposta = propostaRepository.findByDocumento(form.getDocumento());
+        Optional<Proposta> proposta = propostaRepository.findByDocumento(Encriptador.encriptar(form.getDocumento()));
         if (proposta.isPresent()) {
             throw new ApiErrorException("Já existe uma proposta para este documento", "documento", HttpStatus.UNPROCESSABLE_ENTITY);
         }
-
         return new Proposta(form);
     }
 
     public PropostaDto montaPropostaDto() {
-        return new PropostaDto(id, ofuscaEmail(email), ofuscaNome(nome), ofuscaDocumento(documento), avaliacaoFinanceira, ofuscaCartao(cartao));
+        return new PropostaDto(id, ofuscaEmail(email), ofuscaNome(nome), ofuscaDocumento(Encriptador.decriptar(documento)), avaliacaoFinanceira, ofuscaCartao(cartao));
     }
 
     public Long getId() {
