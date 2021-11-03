@@ -65,7 +65,7 @@ class CartaoControllerTest {
     @Test
     void naoDeveEncontrarUmCartaoComIdQueNaoExisteAoSolicitarUmBloqueioERetornarStatus404() throws Exception {
 
-        mockMvc.perform(MockMvcRequestBuilders.post(uri + "/bloqueios/404")
+        mockMvc.perform(MockMvcRequestBuilders.post(uri + "/404/bloqueios")
                         .header("User-Agent", "PostmanRuntime/7.28.4"))
                 .andExpect(MockMvcResultMatchers.status().isNotFound());
     }
@@ -73,15 +73,13 @@ class CartaoControllerTest {
     @Test
     void naoDeveBloquearUmCartaoQuandoARespostaDaApiExternaEhFalhaERetornarStatus422() throws Exception {
 
-
         FeignException.UnprocessableEntity exception = Mockito.mock(FeignException.UnprocessableEntity.class);
         Mockito.when(consultaCartao.solicitarBloqueio(Mockito.any(), Mockito.any()))
                 .thenThrow(exception);
 
-        mockMvc.perform(MockMvcRequestBuilders.post(uri + "/bloqueios/" + cartaoFalha.getId())
+        mockMvc.perform(MockMvcRequestBuilders.post(uri + "/" + cartaoFalha.getId() + "/bloqueios")
                         .header("User-Agent", "PostmanRuntime/7.28.4"))
                 .andExpect(MockMvcResultMatchers.status().isUnprocessableEntity());
-
     }
 
     @Test
@@ -91,7 +89,7 @@ class CartaoControllerTest {
         Mockito.when(consultaCartao.solicitarBloqueio(Mockito.any(), Mockito.any()))
                 .thenThrow(exception);
 
-        mockMvc.perform(MockMvcRequestBuilders.post(uri + "/bloqueios/" + cartaoFalha.getId())
+        mockMvc.perform(MockMvcRequestBuilders.post(uri + "/" + cartaoFalha.getId() + "/bloqueios")
                         .header("User-Agent", "PostmanRuntime/7.28.4"))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest());
 
@@ -113,14 +111,13 @@ class CartaoControllerTest {
         Mockito.when(consultaCartao.solicitarBloqueio(Mockito.any(), Mockito.any()))
                 .thenReturn(responseBloqueio);
 
-        mockMvc.perform(MockMvcRequestBuilders.post(uri + "/bloqueios/" + esteCartao.getId())
+        mockMvc.perform(MockMvcRequestBuilders.post(uri + "/" + esteCartao.getId() + "/bloqueios")
                         .header("User-Agent", "PostmanRuntime/7.28.4"))
                 .andExpect(MockMvcResultMatchers.status().isOk());
 
-        mockMvc.perform(MockMvcRequestBuilders.post(uri + "/bloqueios/" + esteCartao.getId())
+        mockMvc.perform(MockMvcRequestBuilders.post(uri + "/" + esteCartao.getId() + "/bloqueios")
                         .header("User-Agent", "PostmanRuntime/7.28.4"))
                 .andExpect(MockMvcResultMatchers.status().isUnprocessableEntity());
-
     }
 
     @Test
@@ -134,7 +131,7 @@ class CartaoControllerTest {
         Mockito.when(consultaCartao.solicitarBloqueio(Mockito.any(), Mockito.any()))
                 .thenReturn(responseBloqueio);
 
-        mockMvc.perform(MockMvcRequestBuilders.post(uri + "/bloqueios/" + cartao.getId())
+        mockMvc.perform(MockMvcRequestBuilders.post(uri + "/" + cartao.getId() + "/bloqueios")
                         .header("User-Agent", "PostmanRuntime/7.28.4"))
                 .andExpect(MockMvcResultMatchers.status().isOk());
 
@@ -146,12 +143,11 @@ class CartaoControllerTest {
 
         String aviso = "{\"destino\" : \"Tocantins\", \"dataTermino\" : \"" + LocalDate.now().plusDays(10) + "\"}";
 
-        mockMvc.perform(MockMvcRequestBuilders.post(uri + "/avisos/viagem/404")
+        mockMvc.perform(MockMvcRequestBuilders.post(uri + "/404/avisos/viagem")
                         .content(aviso)
                         .header("User-Agent", "PostmanRuntime/7.28.4")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isNotFound());
-
     }
 
     @Test
@@ -159,7 +155,7 @@ class CartaoControllerTest {
 
         String aviso = "{\"destino\" : \"Tocantins\", \"dataTermino\" : \"" + LocalDate.now().minusDays(10) + "\"}";
 
-        mockMvc.perform(MockMvcRequestBuilders.post(uri + "/avisos/viagem/" + cartao.getId())
+        mockMvc.perform(MockMvcRequestBuilders.post(uri + "/" + cartao.getId() + "/avisos/viagem")
                         .content(aviso)
                         .header("User-Agent", "PostmanRuntime/7.28.4")
                         .contentType(MediaType.APPLICATION_JSON))
@@ -172,7 +168,7 @@ class CartaoControllerTest {
 
         String aviso = "{\"destino\" : \"\", \"dataTermino\" : \"" + LocalDate.now().plusDays(10) + "\"}";
 
-        mockMvc.perform(MockMvcRequestBuilders.post(uri + "/avisos/viagem/" + cartao.getId())
+        mockMvc.perform(MockMvcRequestBuilders.post(uri + "/" + cartao.getId() + "/avisos/viagem")
                         .content(aviso)
                         .header("User-Agent", "PostmanRuntime/7.28.4")
                         .contentType(MediaType.APPLICATION_JSON))
@@ -190,12 +186,11 @@ class CartaoControllerTest {
         Mockito.when(consultaCartao.solicitarViagem(Mockito.any(), Mockito.any())).thenReturn(responseAviso);
 
         String aviso = "{\"destino\" : \"Tocantins\", \"dataTermino\" : \"" + LocalDate.now().plusDays(10) + "\"}";
-        mockMvc.perform(MockMvcRequestBuilders.post(uri + "/avisos/viagem/" + cartao.getId())
+        mockMvc.perform(MockMvcRequestBuilders.post(uri + "/" + cartao.getId() + "/avisos/viagem/")
                         .content(aviso)
                         .header("User-Agent", "PostmanRuntime/7.28.4")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isOk());
-
     }
 
     @Test
@@ -205,12 +200,11 @@ class CartaoControllerTest {
         Mockito.when(consultaCartao.solicitarViagem(Mockito.any(), Mockito.any())).thenThrow(exception);
 
         String aviso = "{\"destino\" : \"Tocantins\", \"dataTermino\" : \"" + LocalDate.now().plusDays(10) + "\"}";
-        mockMvc.perform(MockMvcRequestBuilders.post(uri + "/avisos/viagem/" + cartao.getId())
+        mockMvc.perform(MockMvcRequestBuilders.post(uri + "/" + cartao.getId() + "/avisos/viagem")
                         .content(aviso)
                         .header("User-Agent", "PostmanRuntime/7.28.4")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest());
-
     }
 
     @Test
@@ -224,7 +218,7 @@ class CartaoControllerTest {
 
 
         String aviso = "{\"destino\" : \"Tocantins\", \"dataTermino\" : \"" + LocalDate.now().plusDays(10) + "\"}";
-        mockMvc.perform(MockMvcRequestBuilders.post(uri + "/avisos/viagem/" + cartao.getId())
+        mockMvc.perform(MockMvcRequestBuilders.post(uri + "/" + cartao.getId() + "/avisos/viagem")
                         .content(aviso)
                         .header("User-Agent", "PostmanRuntime/7.28.4")
                         .contentType(MediaType.APPLICATION_JSON))
@@ -240,7 +234,7 @@ class CartaoControllerTest {
         Mockito.when(consultaCartao.solicitarNovaCarteira(Mockito.any(), Mockito.any())).thenReturn(resultado);
 
         String form = "{\"carteiraDigital\" : \"PAYPAL\", \"email\" : \"nsouza02@gmail.com\"}";
-        mockMvc.perform(MockMvcRequestBuilders.post(uri + "/carteiras/" + cartao.getId())
+        mockMvc.perform(MockMvcRequestBuilders.post(uri + "/" + cartao.getId() + "/carteiras")
                         .content(form)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isCreated())
@@ -256,12 +250,12 @@ class CartaoControllerTest {
         Mockito.when(consultaCartao.solicitarNovaCarteira(Mockito.any(), Mockito.any())).thenReturn(resultado);
 
         String form = "{\"carteiraDigital\" : \"PAYPAL\", \"email\" : \"nsouza02@gmail.com\"}";
-        mockMvc.perform(MockMvcRequestBuilders.post(uri + "/carteiras/" + cartaoFalha.getId())
+        mockMvc.perform(MockMvcRequestBuilders.post(uri + "/" + cartaoFalha.getId() + "/carteiras")
                         .content(form)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isCreated());
 
-        mockMvc.perform(MockMvcRequestBuilders.post(uri + "/carteiras/" + cartaoFalha.getId())
+        mockMvc.perform(MockMvcRequestBuilders.post(uri + "/" + cartaoFalha.getId() + "/carteiras")
                         .content(form)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isUnprocessableEntity());
@@ -271,7 +265,7 @@ class CartaoControllerTest {
     void naoDeveAssociarUmaNovaCarteiraAUmCartaoSemEmailValidoERetornarStatus400() throws Exception {
 
         String form = "{\"carteiraDigital\" : \"PAYPAL\", \"email\" : \"nsouza02.gmail.com\"}";
-        mockMvc.perform(MockMvcRequestBuilders.post(uri + "/carteiras/" + cartaoFalha.getId())
+        mockMvc.perform(MockMvcRequestBuilders.post(uri + "/" + cartaoFalha.getId() + "/carteiras")
                         .content(form)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest());
@@ -281,7 +275,7 @@ class CartaoControllerTest {
     void naoDeveAssociarUmaNovaCarteiraAUmCartaoSemInformarACarteiraERetornarStatus400() throws Exception {
 
         String form = "{\"carteiraDigital\" : \"\", \"email\" : \"nsouza02@gmail.com\"}";
-        mockMvc.perform(MockMvcRequestBuilders.post(uri + "/carteiras/" + cartao.getId())
+        mockMvc.perform(MockMvcRequestBuilders.post(uri + "/" + cartao.getId() + "/carteiras")
                         .content(form)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest());
@@ -294,7 +288,7 @@ class CartaoControllerTest {
         Mockito.when(consultaCartao.solicitarNovaCarteira(Mockito.any(), Mockito.any())).thenThrow(exception);
 
         String form = "{\"carteiraDigital\" : \"PAYPAL\", \"email\" : \"nsouza02@gmail.com\"}";
-        mockMvc.perform(MockMvcRequestBuilders.post(uri + "/carteiras/" + cartao.getId())
+        mockMvc.perform(MockMvcRequestBuilders.post(uri + "/" + cartao.getId() + "/carteiras")
                         .content(form)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest());
@@ -307,7 +301,7 @@ class CartaoControllerTest {
         Mockito.when(consultaCartao.solicitarNovaCarteira(Mockito.any(), Mockito.any())).thenThrow(exception);
 
         String form = "{\"carteiraDigital\" : \"PAYPAL\", \"email\" : \"nsouza02@gmail.com\"}";
-        mockMvc.perform(MockMvcRequestBuilders.post(uri + "/carteiras/" + cartao.getId())
+        mockMvc.perform(MockMvcRequestBuilders.post(uri + "/" + cartao.getId() + "/carteiras")
                         .content(form)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest());

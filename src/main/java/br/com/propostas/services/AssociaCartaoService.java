@@ -33,7 +33,7 @@ public class AssociaCartaoService {
     private ConsultaCartao consultaCartao;
 
     @Scheduled(fixedDelayString = "${periodicidade.verificacao-cartao}")
-    private void associaCartaoAProposta() {
+    protected void associaCartaoAProposta() {
         List<Proposta> propostasSemCartao = propostaRepository.findPropostasElegiveisSemCartao();
 
         if (propostasSemCartao.isEmpty()) {

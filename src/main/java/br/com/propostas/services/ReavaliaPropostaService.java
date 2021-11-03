@@ -29,7 +29,7 @@ public class ReavaliaPropostaService {
     private ConsultaFinanceiro consultaFinanceiro;
 
     @Scheduled(fixedDelayString = "${periodicidade.verificacao-cartao}")
-    private void verificaPropostasSemAvaliacao() {
+    protected void verificaPropostasSemAvaliacao() {
         List<Proposta> propostasSemAvaliacaoFinanceira = propostaRepository.findPropostasSemAvaliacaoFinanceira();
 
         if (propostasSemAvaliacaoFinanceira.isEmpty()) {
